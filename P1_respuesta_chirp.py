@@ -160,6 +160,14 @@ figname = os.path.join(carpeta_salida,subcarpeta_salida, 'chirp_alta_frecuencia_
 fig.savefig(figname, dpi=300)  
 plt.close(fig)
 
+
+
+
+
+
+
+
+
 #%%
 ## RESPUESTA EMISOR-RECEPTOR METODO BARRIDO DE FRECUENCIAS
 
@@ -207,6 +215,7 @@ data_in, retardos = play_rec(fs,input_channels,data_out,'si',offset_correlacion,
 
 
 #%%
+# Graficos
 
 delay = int(fs*0.5)
 muestras_analisis = int(fs*3)
@@ -287,7 +296,7 @@ plt.close(fig)
 
 
 #%%
-## COMPARACION POTENCIA EMISOR-RECEPTOR METODO BARRIDO DE FRECUENCIAS Y CHIRP
+## COMPARACION POTENCIA EMISOR-RECEPTOR: METODO BARRIDO DE FRECUENCIAS Y CHIRP
 
 carpeta_salida = 'Respuesta'
 subcarpeta_salida = 'Comparacion'
@@ -300,8 +309,8 @@ if not os.path.exists(os.path.join(carpeta_salida,subcarpeta_salida)):
 
 fig = plt.figure(figsize=(14, 7), dpi=250)
 ax = fig.add_axes([.12, .12, .75, .8])
-ax.semilogy(frec_send1,fft_norm,'-',color='blue', label=u'Potencia por chirp',alpha=0.7,linewidth=2)
-ax.semilogy(frecs_finales,pot_salida_max,'o',color='red', label=u'Potencia por barrido',alpha=0.7,linewidth=2)
+ax.semilogy(frec_send1,fft_norm,'-',color='blue', label=u'Potencia por chirp',alpha=0.7,linewidth=2) # por chirp
+ax.semilogy(frecs_finales,pot_salida_max,'o',color='red', label=u'Potencia por barrido',alpha=0.7,linewidth=2) # barrido
 
 ax.axvline(14.6,linestyle='--',color='red',alpha=0.7, label='Ancho de banda')
 ax.axvline(20187,linestyle='--',color='red',alpha=0.7)

@@ -308,14 +308,18 @@ def sincroniza_con_trigger(trigger,data_in,offset_correlacion=0,steps_correlacio
     
     print (u'\n Inicio corrección \n Presione Ctrl + c para interrumpir.')
  
+    # Cantidad de muestras extras que se toman
     extra = 0
-        
+    
+    # Estas son las salidas    
     data_in_corrected = np.zeros([trigger.shape[0],trigger.shape[1]+extra,data_in.shape[2]])
     retardos = np.array([])
- 
+    
+    # Defino la matriz de trigger enviada y adquirida
     trigger_send = trigger[:,:,0]
     trigger_acq = data_in[:,:,0]  
 
+    # Array donde se guarda la señal de trigger digital
     comp = np.zeros(trigger_acq.shape[1])  
 
     if steps_correlacion == 0:
@@ -330,7 +334,7 @@ def sincroniza_con_trigger(trigger,data_in,offset_correlacion=0,steps_correlacio
 #            corr = np.correlate(trigger_acq[i,:] - np.mean(trigger_acq[i,:]),trigger_send[i,offset_correlacion:offset_correlacion+steps_correlacion] - np.mean(trigger_send[i,offset_correlacion:offset_correlacion+steps_correlacion]))
 #            pos_max = np.argmax(corr) - offset_correlacion
             
-            # Uso correlación con FFT que es mucho mas rapida que la de numpy
+            # Uso correlación cruzada con FFT que es mucho mas rapida que la de numpy
             comp[0:steps_correlacion] = trigger_send[i,offset_correlacion:offset_correlacion+steps_correlacion]
             corr = cross_correlation_using_fft(trigger_acq[i,:] - np.mean(trigger_acq[i,:]),comp-np.mean(comp))
             pos_max = np.argmax(corr)-int(len(corr)/2)-offset_correlacion+1
