@@ -17,7 +17,7 @@ import time
 import matplotlib.pylab as pylab
 from scipy import signal
 from sys import stdout
-
+import numpy.fft as fft
     
     
 params = {'legend.fontsize': 'medium',
@@ -27,6 +27,19 @@ params = {'legend.fontsize': 'medium',
          'xtick.labelsize':'medium',
          'ytick.labelsize':'medium'}
 pylab.rcParams.update(params)
+
+
+def cross_correlation_using_fft(x, y):
+    """
+    Se utiliza el algoritmo propuesto en:
+        https://lexfridman.com/fast-cross-correlation-and-time-series-synchronization-in-python/
+    
+    """
+    
+    f1 = fft.fft(x)
+    f2 = fft.fft(np.flipud(y))
+    cc = np.real(fft.ifft(f1 * f2))
+    return fft.fftshift(cc)
 
 
 def barra_progreso(paso,pasos_totales,leyenda,tiempo_ini):
@@ -138,7 +151,7 @@ def play_rec(fs,input_channels,data_out,corrige_retardos,offset_correlacion=0,st
     output_channels = data_out.shape[2]
             
     # Obligo a la duracion de la adquisicion > a la de salida    
-    duration_sec_acq = duration_sec_send + 0.5 
+    duration_sec_acq = duration_sec_send + 0.6 
     
     # Inicia pyaudio
     p = pyaudio.PyAudio()
@@ -232,7 +245,7 @@ def play_rec(fs,input_channels,data_out,corrige_retardos,offset_correlacion=0,st
     consumer_exit = [False] 
             
     # Inicio los threads    
-    print (u'\n Inicio barrido \n Presione Ctrl + c para interrumpir  \n')
+    print (u'\n Inicio barrido \n Presione Ctrl + c para interrumpir.')
     t1 = threading.Thread(target=producer, args=[steps])
     t2 = threading.Thread(target=consumer, args=[steps])
     t1.start()
@@ -293,15 +306,21 @@ def sincroniza_con_trigger(trigger,data_in,offset_correlacion=0,steps_correlacio
     Autores: Leslie Cusato, Marco Petriella   
     """
     
-    print (u'\n Inicio corrección \n Presione Ctrl + c para interrumpir  \n')
+    print (u'\n Inicio corrección \n Presione Ctrl + c para interrumpir.')
  
+    # Cantidad de muestras extras que se toman
     extra = 0
-        
+    
+    # Estas son las salidas    
     data_in_corrected = np.zeros([trigger.shape[0],trigger.shape[1]+extra,data_in.shape[2]])
     retardos = np.array([])
- 
+    
+    # Defino la matriz de trigger enviada y adquirida
     trigger_send = trigger[:,:,0]
-    trigger_acq = data_in[:,:,0]      
+    trigger_acq = data_in[:,:,0]  
+
+    # Array donde se guarda la señal de trigger digital
+    comp = np.zeros(trigger_acq.shape[1])  
 
     if steps_correlacion == 0:
         steps_correlacion = trigger_send.shape[1]     
@@ -310,12 +329,20 @@ def sincroniza_con_trigger(trigger,data_in,offset_correlacion=0,steps_correlacio
     errores = []         
     for i in range(data_in.shape[0]):
         try:
-    
-            corr = np.correlate(trigger_acq[i,:] - np.mean(trigger_acq[i,:]),trigger_send[i,offset_correlacion:offset_correlacion+steps_correlacion] - np.mean(trigger_send[i,offset_correlacion:offset_correlacion+steps_correlacion]))
-            pos_max = np.argmax(corr) - offset_correlacion
+            
+            # Correlacion con la función de numpy
+#            corr = np.correlate(trigger_acq[i,:] - np.mean(trigger_acq[i,:]),trigger_send[i,offset_correlacion:offset_correlacion+steps_correlacion] - np.mean(trigger_send[i,offset_correlacion:offset_correlacion+steps_correlacion]))
+#            pos_max = np.argmax(corr) - offset_correlacion
+            
+            # Uso correlación cruzada con FFT que es mucho mas rapida que la de numpy
+            comp[0:steps_correlacion] = trigger_send[i,offset_correlacion:offset_correlacion+steps_correlacion]
+            corr = cross_correlation_using_fft(trigger_acq[i,:] - np.mean(trigger_acq[i,:]),comp-np.mean(comp))
+            pos_max = np.argmax(corr)-int(len(corr)/2)-offset_correlacion+1
+            
             retardos = np.append(retardos,pos_max)
 #            plt.plot(corr)
 #            print(pos_max)
+
             
             barra_progreso(i,data_in.shape[0],u'Progreso corrección',tiempo_ini) 
             
