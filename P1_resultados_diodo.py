@@ -93,4 +93,8 @@ plt.legend()
 plt.figure()
 plt.plot(caida_res,caida_diodo)
 
+plt.figure()
+plt.plot(gen_diodo[0,:,0]/np.max(gen_diodo[0,:,0]))
+plt.plot(rec_diodo[0,:,0]/np.max(rec_diodo[0,:,0]))
+plt.title('generada y recibida normalizadas')
 plt.show()
