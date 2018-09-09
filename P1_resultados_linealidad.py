@@ -23,15 +23,16 @@ rec = np.load(folder+data_rec)
 fs = 44100*8
 # grafica dejando afuera los primeros 100 ms
 #(donde la señal tiene oscilaciones)
-#ajuste lineal
-ti = int(fs*0.1)
-tf = -int(fs*0.1)
 
 def calibrate(gen,rec,type,chrec):
     """
+    plot received vs sent signal, from ti to tf samples.
     chgen = 0 for sine, 1 for Ramp
     chrec = 0, 1
     """
+    ti = int(fs*0.1)
+    tf = -int(fs*0.1)
+
     if type =='sine':
         chgen = 0
     elif type == 'ramp':
@@ -74,7 +75,5 @@ z1r = calibrate(gen,rec,'ramp', 1)[0]
 
 print(z0s,z0r)
 print(z1s,z1r)
-# figname = os.path.join(carpeta_salida, 'calibracion.png')
-# fig.savefig(figname, dpi=300)
-# plt.close(fig)
+
 plt.show()
