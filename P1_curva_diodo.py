@@ -277,6 +277,9 @@ data_in[:,:,0] = (data_in[:,:,0]-calibracion_CH0_seno[1])/(calibracion_CH0_seno[
 data_in[:,:,1] = (data_in[:,:,1]-calibracion_CH1_seno[1])/(calibracion_CH1_seno[0])
 tiempo = np.arange(data_in.shape[1])/fs
 
+delay = 0
+med = 1
+offset = 0.0 #R150
 
 caida_tot = -data_in[0,:,0] 
 caida_res = -data_in[0,:,1] 
@@ -292,7 +295,7 @@ popt_fit, pcov = curve_fit(func_exp, tiempo_offset, caida_offset)
 fig = plt.figure(figsize=(14, 7), dpi=250)
 ax = fig.add_axes([.12, .15, .75, .8])
 ax.plot(tiempo,caida_tot,'-',label=u'Tensión Diodo + Resistencia',alpha=0.8,linewidth=2)
-ax.plot(tiempo,caida_res ,'-',label=u'Tensión diodo',alpha=0.8,linewidth=2)
+ax.plot(tiempo,caida_res ,'-',label=u'Tensión resistencia',alpha=0.8,linewidth=2)
 ax.plot(tiempo_offset,func_exp(tiempo_offset, *popt_fit),'--',color='red',label='Ajuste caida')
 
 ax.text(1.01,0.9,'Ajuste: a*exp(x/b) + c', transform=ax.transAxes)
@@ -310,6 +313,10 @@ ax.set_title(u'Caida de tensión en diodo y resistencia '+diodo+' utilizando un 
 figname = os.path.join(carpeta_salida,subcarpeta_salida, 'caida_diodo_res_'+diodo+'_'+str(resistencia)+'_'+str(temp)+'C_'+str(frec_ini)+'hz_sin_corregir_offset.png')
 fig.savefig(figname, dpi=300)  
 plt.close(fig)
+
+
+
+
 
 #%%
 
