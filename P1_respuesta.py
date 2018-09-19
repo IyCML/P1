@@ -25,14 +25,14 @@ from P1_funciones import play_rec
 from P1_funciones import signalgen
 from P1_funciones import sincroniza_con_trigger
 
-params = {'legend.fontsize': 'x-large',
-     #     'figure.figsize': (15, 5),
-         'axes.labelsize': 'x-large',
-         'axes.titlesize':'x-large',
-         'xtick.labelsize':'x-large',
-         'ytick.labelsize':'x-large'}
+params = {'legend.fontsize': 14,
+          'figure.figsize': (14, 9),
+         'axes.labelsize': 24,
+         'axes.titlesize':18,
+         'font.size':18,
+         'xtick.labelsize':24,
+         'ytick.labelsize':24}
 pylab.rcParams.update(params)
-
 
 
 
@@ -106,7 +106,7 @@ np.save(os.path.join(carpeta_salida,subcarpeta_salida, 'frecuencia_chirp'),frec_
 
 
 fig = plt.figure(figsize=(14, 7), dpi=250)
-ax = fig.add_axes([.12, .12, .75, .8])
+ax = fig.add_axes([.15, .15, .75, .8])     
 ax.semilogy(frec_send1,fft_acq1/fft_acq1[frec_ind_send],'-', label=u'Señal adquirida',alpha=0.7,linewidth=2)
 ax.semilogy(frec_send1,fft_send1/fft_send1[frec_ind_send],'-', label=u'Señal enviada',alpha=0.7,linewidth=2)
 ax.semilogy(frec_send1,fft_norm1,'-', label=u'Señal normalizada',alpha=0.7,linewidth=2)
@@ -136,7 +136,7 @@ plt.close(fig)
 
 
 
-fig = plt.figure(figsize=(14, 8), dpi=250)
+fig = plt.figure(dpi=250)
 ax = fig.add_axes([.10, .12, .37, .8])
 ax.semilogy(frec_send1,fft_acq1/fft_acq1[frec_ind_send],'-', label=u'Señal adquirida',alpha=0.7,linewidth=2)
 ax.semilogy(frec_send1,fft_send1/fft_send1[frec_ind_send],'-', label=u'Señal enviada',alpha=0.7,linewidth=2)
@@ -177,7 +177,7 @@ plt.close(fig)
 
 
 fig = plt.figure(figsize=(14, 7), dpi=250)
-ax = fig.add_axes([.12, .12, .75, .8])
+ax = fig.add_axes([.15, .15, .75, .8])     
 ax.semilogy(frec_send1,fft_norm1,'-',color='blue', label=u'Señal normalizada',alpha=0.7,linewidth=2)
 ax.axvline(14.6,linestyle='--',color='red',alpha=0.7, label='Ancho de banda')
 ax.axvline(20187,linestyle='--',color='red',alpha=0.7)
@@ -208,8 +208,8 @@ plt.close(fig)
 
 
 ### TRAZA TEMPORAL
-fig = plt.figure(figsize=(14, 8), dpi=250)
-ax = fig.add_axes([.12, .12, .75, .8])
+fig = plt.figure(dpi=250)
+ax = fig.add_axes([.15, .15, .75, .8])     
 ax1 = ax.twinx()
 ax1.plot(data_out1[0,:,0],linewidth=2,color='blue',alpha=0.7,label=u'Señal enviada')
 ax.plot(data_in1[0,:,0],linewidth=2,color='red',alpha=0.7,label=u'Señal adquirida')
@@ -315,7 +315,7 @@ if not os.path.exists(os.path.join(carpeta_salida,subcarpeta_salida)):
     os.mkdir(os.path.join(carpeta_salida,subcarpeta_salida))    
 
 fig = plt.figure(figsize=(14, 7), dpi=250)
-ax = fig.add_axes([.12, .12, .75, .8])
+ax = fig.add_axes([.15, .15, .75, .8])     
 ax.semilogy(frec_send2[::50],fft_acq2[::50]/fft_acq2[frec_ind_send],'-',color='blue', label=u'Señal adquirida',alpha=0.7,linewidth=1)
 ax.semilogy(frec_send2[::50],fft_send2[::50]/fft_send2[frec_ind_send],'-',color='red', label=u'Señal enviada',alpha=0.7,linewidth=1)
 ax.set_xlim([-1000,28000])
@@ -346,7 +346,7 @@ plt.close(fig)
 fft_norm2 = fft_acq2/fft_acq2[frec_ind_send]/(fft_send2/fft_send2[frec_ind_send])
 
 fig = plt.figure(figsize=(14, 7), dpi=250)
-ax = fig.add_axes([.12, .12, .75, .8])
+ax = fig.add_axes([.15, .15, .75, .8])     
 ax.semilogy(frec_send2,fft_norm2,'-',color='blue', label=u'Señal normalizada',alpha=0.7,linewidth=2)
 ax.axvline(14.6,linestyle='--',color='red',alpha=0.7, label='Ancho de banda')
 ax.axvline(20187,linestyle='--',color='red',alpha=0.7)
@@ -474,7 +474,7 @@ if not os.path.exists(os.path.join(carpeta_salida,subcarpeta_salida)):
     os.mkdir(os.path.join(carpeta_salida,subcarpeta_salida))    
 
 fig = plt.figure(figsize=(14, 7), dpi=250)
-ax = fig.add_axes([.12, .12, .75, .8])
+ax = fig.add_axes([.15, .15, .75, .8])     
 ax.semilogy(frecs_finales,pot_salida_max,'-',color='blue', label=u'Señal adquirida',alpha=0.7,linewidth=2)
 ax.set_xlim([-1000,28000])
 ax.set_ylim([1e-3,1e1])
@@ -514,8 +514,8 @@ if not os.path.exists(os.path.join(carpeta_salida,subcarpeta_salida)):
     os.mkdir(os.path.join(carpeta_salida,subcarpeta_salida)) 
 
 
-fig = plt.figure(figsize=(14, 8), dpi=250)
-ax = fig.add_axes([.12, .12, .75, .8])
+fig = plt.figure(dpi=250)
+ax = fig.add_axes([.15, .15, .75, .8])     
 ax.semilogy(frec_send1,fft_norm1,'-',color='blue', label=u'Potencia por chirp',alpha=0.7,linewidth=2) # por chirp
 ax.semilogy(frecs_finales,pot_salida_max,'o',color='red', label=u'Potencia por barrido',alpha=0.7,linewidth=2) # barrido
 
@@ -548,7 +548,7 @@ plt.close(fig)
 
 
 
-fig = plt.figure(figsize=(14, 8), dpi=250)
+fig = plt.figure(dpi=250)
 ax = fig.add_axes([.10, .12, .37, .8])
 ax.semilogy(frec_send1,fft_norm1,'-',color='blue', label=u'Potencia por chirp',alpha=0.7,linewidth=2) # por chirp
 ax.semilogy(frecs_finales,pot_salida_max,'o',color='red', label=u'Potencia por barrido',alpha=0.7,linewidth=2) # barrido
@@ -593,7 +593,7 @@ if not os.path.exists(os.path.join(carpeta_salida,subcarpeta_salida)):
 
 
 fig = plt.figure(figsize=(14, 7), dpi=250)
-ax = fig.add_axes([.12, .12, .75, .8])
+ax = fig.add_axes([.15, .15, .75, .8])     
 ax.semilogy(frec_send2,fft_norm2,'-',color='blue', label=u'Potencia por ruido blanco',alpha=0.7,linewidth=2) # por chirp
 ax.semilogy(frecs_finales,pot_salida_max,'o',color='red', label=u'Potencia por barrido',alpha=0.7,linewidth=2) # barrido
 

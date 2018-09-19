@@ -27,12 +27,12 @@ from P1_funciones import signalgen
 from P1_funciones import signalgen_corrected
 from P1_funciones import sincroniza_con_trigger
 
-params = {'legend.fontsize': 'large',
-     #     'figure.figsize': (15, 5),
-         'axes.labelsize': 'large',
-         'axes.titlesize':'medium',
-         'xtick.labelsize':'large',
-         'ytick.labelsize':'large'}
+params = {'legend.fontsize': 24,
+         'figure.figsize': (14, 9),
+         'axes.labelsize': 24,
+         'axes.titlesize':24,
+         'xtick.labelsize':24,
+         'ytick.labelsize':24}
 pylab.rcParams.update(params)
 
 
@@ -125,7 +125,7 @@ data_in[:,:,1] = (data_in[:,:,1]-calibracion_CH1_seno[1])/(calibracion_CH1_seno[
 
 tiempo = np.linspace(0,data_in.shape[1]-1,data_in.shape[1])/fs
 
-fig = plt.figure(figsize=(14, 7), dpi=250)
+fig = plt.figure(dpi=250)
 ax = fig.add_axes([.12, .15, .75, .8])
 #ax1 = ax.twinx()
 ax.plot(tiempo,data_in[0,:,0],'-',label='',alpha=0.8)
@@ -188,7 +188,7 @@ i_res_cre = i_res_cre[ind_cre]
 i_res_dec = i_res[:-1]
 i_res_dec = i_res_dec[ind_dec]
 
-fig = plt.figure(figsize=(14, 7), dpi=250)
+fig = plt.figure(dpi=250)
 ax = fig.add_axes([.12, .15, .75, .8])
 ax.plot(caida_diodo_cre,i_res_cre*1000,'.',label='Flanco creciente',alpha=0.8)
 ax.plot(caida_diodo_dec,i_res_dec*1000,'.',label='Flanco decreciente',alpha=0.8)
@@ -223,7 +223,7 @@ i_res_dec_uno = i_res_dec[int(fs/(frec_ini*4)):+int(fs/(frec_ini*4))+int(fs/(fre
 guess = np.array([Is, Vt/n, Is])
 popt_dec, pcov = curve_fit(func_exp, caida_diodo_dec_uno, i_res_dec_uno,guess)
 
-fig = plt.figure(figsize=(14, 7), dpi=250)
+fig = plt.figure(dpi=250)
 ax = fig.add_axes([.12, .15, .75, .8])
 ax.plot(caida_diodo_cre_uno,i_res_cre_uno*1000,'.',label='Flanco creciente',alpha=0.7)
 #ax.plot(caida_diodo_dec_uno,i_res_dec_uno*1000,'.',label='Flanco decreciente',alpha=0.7)
@@ -246,7 +246,7 @@ plt.close(fig)
 
 
 
-fig = plt.figure(figsize=(14, 7), dpi=250)
+fig = plt.figure(dpi=250)
 ax = fig.add_axes([.12, .15, .75, .8])
 ax.plot(tiempo,caida_tot,'-',label=u'Tensión diodo + desistencia',alpha=0.8,linewidth=2)
 ax.plot(tiempo,caida_diodo,'-',label=u'Tensión diodo',alpha=0.8,linewidth=2)
@@ -271,7 +271,7 @@ caida_res = -data_in[0,int(fs*delay):int(fs*(delay+med)),1] +offset#+ np.max(dat
 tiempo = np.arange(data_in.shape[1])/fs
 tiempo = tiempo[int(fs*delay):int(fs*(delay+med))]
 
-fig = plt.figure(figsize=(14, 7), dpi=250)
+fig = plt.figure(dpi=250)
 ax = fig.add_axes([.12, .15, .75, .8])
 ax.plot(tiempo,caida_tot,'-',label=u'Tensión Diodo + Resistencia',alpha=0.8,linewidth=2)
 ax.plot(tiempo,caida_diodo,'-',label=u'Tensión diodo',alpha=0.8,linewidth=2)
@@ -294,7 +294,7 @@ t1 = (20+273.2)*fac - 273.2
 
 #%%
 
-fig = plt.figure(figsize=(14, 7), dpi=250)
+fig = plt.figure(dpi=250)
 ax = fig.add_axes([.12, .15, .75, .8])
 ax1 = ax.twinx()
 ax.plot(caida_tot ,alpha=0.8)
@@ -330,7 +330,7 @@ caida_diodo = caida_tot - caida_res
 i_res = caida_res/resistencia
 
 
-fig = plt.figure(figsize=(14, 7), dpi=250)
+fig = plt.figure(dpi=250)
 ax = fig.add_axes([.12, .15, .75, .8])
 ax1 = ax.twinx()
 ax.plot(caida_tot ,alpha=0.8)
@@ -361,7 +361,7 @@ frec_acq = np.linspace(0,int(data_in.shape[1]/2),int(data_in.shape[1]/2+1))
 frec_acq = frec_acq*(fs/2+1)/int(data_in.shape[1]/2+1)
 
 
-fig = plt.figure(figsize=(14, 7), dpi=250)
+fig = plt.figure(dpi=250)
 ax = fig.add_axes([.12, .12, .75, .8])
 ax1 = ax.twinx()
 ax.semilogy(frec_send,fft_send,'-' ,label='Frec enviada',alpha=0.7)

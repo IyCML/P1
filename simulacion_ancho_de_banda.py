@@ -25,12 +25,12 @@ from P1_funciones import signalgen
 from P1_funciones import signalgen_corrected
 from P1_funciones import sincroniza_con_trigger
 
-params = {'legend.fontsize': 'large',
-     #     'figure.figsize': (15, 5),
-         'axes.labelsize': 'large',
-         'axes.titlesize':'medium',
-         'xtick.labelsize':'large',
-         'ytick.labelsize':'large'}
+params = {'legend.fontsize': 24,
+         'figure.figsize': (14, 9),
+         'axes.labelsize': 24,
+         'axes.titlesize':24,
+         'xtick.labelsize':24,
+         'ytick.labelsize':24}
 pylab.rcParams.update(params)
 
 
