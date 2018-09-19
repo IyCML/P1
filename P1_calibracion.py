@@ -26,12 +26,12 @@ from P1_funciones import play_rec
 from P1_funciones import signalgen
 from P1_funciones import sincroniza_con_trigger
 
-params = {'legend.fontsize': 'large',
+params = {'legend.fontsize': 'x-large',
      #     'figure.figsize': (15, 5),
-         'axes.labelsize': 'large',
-         'axes.titlesize':'medium',
-         'xtick.labelsize':'large',
-         'ytick.labelsize':'large'}
+         'axes.labelsize': 'x-large',
+         'axes.titlesize':'x-large',
+         'xtick.labelsize':'x-large',
+         'ytick.labelsize':'x-large'}
 pylab.rcParams.update(params)
 
 
@@ -178,7 +178,7 @@ for mic_level in mic_levels:
             ajuste = np.polyfit(data_out[i,int(fs*0.1):-int(fs*0.1),j]/amplitud*amplitud_v,data_in[i,int(fs*0.1):-int(fs*0.1),j],1)
             
             
-            fig = plt.figure(figsize=(14, 7), dpi=250)
+            fig = plt.figure(figsize=(14, 8), dpi=250)
             ax = fig.add_axes([.12, .15, .75, .8])        
             ax.plot(data_out[i,int(fs*0.1):-int(fs*0.1),j]/amplitud*amplitud_v,data_in[i,int(fs*0.1):-int(fs*0.1),j],'--',color='blue',alpha=0.8,label='Señal')
             ax.plot(data_out[i,int(fs*0.1):-int(fs*0.1),j]/amplitud*amplitud_v,data_out[i,int(fs*0.1):-int(fs*0.1),j]/amplitud*amplitud_v*ajuste[0]+ajuste[1],'--',color='red',alpha=0.8,label='Ajuste')
@@ -196,7 +196,7 @@ for mic_level in mic_levels:
     
             
             
-            fig = plt.figure(figsize=(14, 7), dpi=250)
+            fig = plt.figure(figsize=(14, 8), dpi=250)
             ax = fig.add_axes([.12, .15, .75, .8])        
             ax.plot(data_out[i,int(fs*0.1):-int(fs*0.1),j]/amplitud*amplitud_v,(data_in[i,int(fs*0.1):-int(fs*0.1),j]-ajuste[1])/ajuste[0],'--',color='red')       
             ax.set_xlabel('Señal enviada [V]')
@@ -230,7 +230,7 @@ for i,mic_level in enumerate(mic_levels):
 
 mic_levels_array = np.asarray(mic_levels)
 
-fig = plt.figure(figsize=(14, 7), dpi=250)
+fig = plt.figure(figsize=(14, 8), dpi=250)
 ax = fig.add_axes([.12, .15, .75, .8])  
 ax.semilogy(mic_levels_array,rango_ch0,'o',label='CH0',alpha=0.7,markersize=10)
 ax.semilogy(mic_levels_array,rango_ch1,'o',label='CH1',alpha=0.7,markersize=10)
@@ -282,7 +282,7 @@ amplitud_v_chs = [amplitud_v_ch0[ind_nivel],amplitud_v_ch1[ind_nivel]] #V
 
 mic_levels = [10,20,30,40,50,60,70,80,90,100]
 
-fig = plt.figure(figsize=(14, 7), dpi=250)
+fig = plt.figure(figsize=(14, 8), dpi=250)
 ax = fig.add_axes([.12, .15, .75, .8])   
 
 for i,mic_level in enumerate(mic_levels):
@@ -314,7 +314,7 @@ amplitud_v_ch0 = tension_rms_v_ch0*np.sqrt(2)
 tension_rms_v_ch1 = np.array([0.050, 0.146, 0.291, 0.451, 0.693, 0.904, 1.170, 1.518, 1.812, 2.330])
 amplitud_v_ch1 = tension_rms_v_ch1*np.sqrt(2)  
 
-fig = plt.figure(figsize=(14, 7), dpi=250)
+fig = plt.figure(figsize=(14, 8), dpi=250)
 ax = fig.add_axes([.12, .15, .75, .8])  
 ax.plot(windows_nivel,amplitud_v_ch0,'o',label='CH0',alpha=0.7,markersize=10)
 ax.plot(windows_nivel,amplitud_v_ch1,'o',label='CH1',alpha=0.7,markersize=10)

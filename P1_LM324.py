@@ -71,13 +71,13 @@ duracion = 1
 muestras = int(fs*duracion) + int(fs*1)
 input_channels = 2
 output_channels = 1
-amplitud_v_chs_out = [2.0,2.0] #V
+amplitud_v_chs_out = [2.1,2.1] #V
 amplitud_chs = []
 for i in range(output_channels):
     amplitud_chs.append(amplitud_v_chs_out[i]/amplitud_v_chs[i,ind_nivel])
     
-frec_ini = 500
-frec_fin = 500
+frec_ini = 1020
+frec_fin = 1020
 pasos_frec = 1
 delta_frec = (frec_fin-frec_ini)/(pasos_frec+1)
 data_out = np.zeros([pasos_frec,muestras,output_channels])
@@ -94,7 +94,7 @@ for i in range(pasos_frec):
     
     for j in range(output_channels):
         amp = amplitud_chs[j]
-        output_signal = signalgen('square',fr,amp,duration,fs)
+        output_signal = signalgen('ramp',fr,amp,duration,fs)
         output_signal = np.append(output_signal,np.zeros(int(fs*1)))
 #        output_signal = signalgen_corrected('square',fr,amp,duration,fs,frec_send,fft_norm,[2,20500])
 #        output_signal = np.append(output_signal,np.zeros(int(fs*1)))
@@ -127,12 +127,32 @@ tiempo = np.linspace(0,data_in.shape[1]-1,data_in.shape[1])/fs
 
 fig = plt.figure(figsize=(14, 7), dpi=250)
 ax = fig.add_axes([.12, .15, .75, .8])
+#ax1 = ax.twinx()
 ax.plot(tiempo,data_in[0,:,0],'-',label='',alpha=0.8)
-ax.plot(tiempo,data_in[0,:,1],'-',label='',alpha=0.8)
+ax.plot(tiempo,data_in[0,:,1],'-',color='red',label='',alpha=0.8)
 ax.legend()
 ax.grid(linestyle='--')
-ax.set_xlabel(u'Tensión diodo [V]')
-ax.set_ylabel(u'Corriente diodo [mA]')
+ax.set_xlabel(u'Tiempo [s]')
+ax.set_ylabel(u'Tensión [V]')
+
+
+med = 0.1
+delay = 0.5
+
+caida_res = data_in[0,int(fs*delay):int(fs*(delay+med)),1] 
+
+fft1 = np.abs(fft.fft(caida_res))
+fft1 = fft1[0:int(len(fft1)/2)+1]
+frec = np.arange(0,len(fft1))/len(fft1)*fs/2
+
+fig = plt.figure(figsize=(14, 7), dpi=250)
+ax = fig.add_axes([.12, .15, .75, .8])
+ax.plot(frec,fft1,'-',label=u'FFT tensión medida',alpha=0.8,linewidth=2)
+ax.set_xlim([-200,2000])
+ax.set_xlabel(u'Frecuencia [Hz]')
+ax.set_ylabel(u'FFT [u.a.]')
+ax.legend()
+ax.grid(linestyle='--')
 
 
 #%%

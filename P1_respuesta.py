@@ -25,12 +25,12 @@ from P1_funciones import play_rec
 from P1_funciones import signalgen
 from P1_funciones import sincroniza_con_trigger
 
-params = {'legend.fontsize': 'large',
+params = {'legend.fontsize': 'x-large',
      #     'figure.figsize': (15, 5),
-         'axes.labelsize': 'large',
-         'axes.titlesize':'medium',
-         'xtick.labelsize':'large',
-         'ytick.labelsize':'large'}
+         'axes.labelsize': 'x-large',
+         'axes.titlesize':'x-large',
+         'xtick.labelsize':'x-large',
+         'ytick.labelsize':'x-large'}
 pylab.rcParams.update(params)
 
 
@@ -99,10 +99,18 @@ if not os.path.exists(carpeta_salida):
 if not os.path.exists(os.path.join(carpeta_salida,subcarpeta_salida)):
     os.mkdir(os.path.join(carpeta_salida,subcarpeta_salida))    
 
+
+fft_norm1 = fft_acq1/fft_acq1[frec_ind_send]/(fft_send1/fft_send1[frec_ind_send])
+np.save(os.path.join(carpeta_salida,subcarpeta_salida, 'respuesta_potencia_chirp'),fft_norm1)
+np.save(os.path.join(carpeta_salida,subcarpeta_salida, 'frecuencia_chirp'),frec_send1)
+
+
 fig = plt.figure(figsize=(14, 7), dpi=250)
 ax = fig.add_axes([.12, .12, .75, .8])
-ax.semilogy(frec_send1,fft_acq1/fft_acq1[frec_ind_send],'-',color='blue', label=u'Señal adquirida',alpha=0.7,linewidth=2)
-ax.semilogy(frec_send1,fft_send1/fft_send1[frec_ind_send],'-',color='red', label=u'Señal enviada',alpha=0.7,linewidth=2)
+ax.semilogy(frec_send1,fft_acq1/fft_acq1[frec_ind_send],'-', label=u'Señal adquirida',alpha=0.7,linewidth=2)
+ax.semilogy(frec_send1,fft_send1/fft_send1[frec_ind_send],'-', label=u'Señal enviada',alpha=0.7,linewidth=2)
+ax.semilogy(frec_send1,fft_norm1,'-', label=u'Señal normalizada',alpha=0.7,linewidth=2)
+
 ax.set_xlim([-1000,28000])
 ax.set_ylim([1e-3,1e1])
 ax.set_title(u'FFT de la señal enviada y adquirida')
@@ -111,7 +119,6 @@ ax.set_ylabel('Potencia [db]')
 ax.set_title('Potencia del conjunto emisor-receptor de la placa de audio de PC')
 ax.legend(loc=1)
 ax.grid(linewidth=0.5,linestyle='--')
-plt.show()
 
 figname = os.path.join(carpeta_salida,subcarpeta_salida, 'chirp.png')
 fig.savefig(figname, dpi=300)  
@@ -128,11 +135,45 @@ fig.savefig(figname, dpi=300)
 plt.close(fig)
 
 
-# Normalizado
-fft_norm1 = fft_acq1/fft_acq1[frec_ind_send]/(fft_send1/fft_send1[frec_ind_send])
 
-np.save(os.path.join(carpeta_salida,subcarpeta_salida, 'respuesta_potencia_chirp'),fft_norm1)
-np.save(os.path.join(carpeta_salida,subcarpeta_salida, 'frecuencia_chirp'),frec_send1)
+fig = plt.figure(figsize=(14, 8), dpi=250)
+ax = fig.add_axes([.10, .12, .37, .8])
+ax.semilogy(frec_send1,fft_acq1/fft_acq1[frec_ind_send],'-', label=u'Señal adquirida',alpha=0.7,linewidth=2)
+ax.semilogy(frec_send1,fft_send1/fft_send1[frec_ind_send],'-', label=u'Señal enviada',alpha=0.7,linewidth=2)
+ax.semilogy(frec_send1,fft_norm1,'-', label=u'Señal normalizada',alpha=0.7,linewidth=2)
+
+ax.set_xlim([-1000,28000])
+ax.set_ylim([1e-3,1e1])
+ax.set_title(u'FFT de la señal enviada y adquirida')
+ax.set_xlabel('Frecuencia [Hz]')
+ax.set_ylabel('Potencia [db]')
+ax.set_title('Potencia del conjunto emisor-receptor')
+ax.legend(loc=1)
+ax.grid(linewidth=0.5,linestyle='--')
+
+ax1 = fig.add_axes([.58, .12, .37, .8])
+ax1.semilogy(frec_send1,fft_acq1/fft_acq1[frec_ind_send],'-', label=u'Señal adquirida',alpha=0.7,linewidth=2)
+ax1.semilogy(frec_send1,fft_send1/fft_send1[frec_ind_send],'-', label=u'Señal enviada',alpha=0.7,linewidth=2)
+ax1.semilogy(frec_send1,fft_norm1,'-', label=u'Señal normalizada',alpha=0.7,linewidth=2)
+
+ax1.set_xlim([-100,500])
+ax1.set_ylim([1e-3,1e1])
+ax1.set_xlabel('Frecuencia [Hz]')
+ax1.set_ylabel('Potencia [db]')
+ax1.set_title('Detalle baja frecuencia')
+ax1.legend(loc=1)
+ax1.grid(linewidth=0.5,linestyle='--')
+
+figname = os.path.join(carpeta_salida,subcarpeta_salida, 'chirp_detalle.png')
+fig.savefig(figname, dpi=300)  
+plt.close(fig)
+
+
+
+
+
+# Normalizado
+
 
 
 fig = plt.figure(figsize=(14, 7), dpi=250)
@@ -167,16 +208,16 @@ plt.close(fig)
 
 
 ### TRAZA TEMPORAL
-fig = plt.figure(figsize=(14, 7), dpi=250)
+fig = plt.figure(figsize=(14, 8), dpi=250)
 ax = fig.add_axes([.12, .12, .75, .8])
 ax1 = ax.twinx()
 ax1.plot(data_out1[0,:,0],linewidth=2,color='blue',alpha=0.7,label=u'Señal enviada')
 ax.plot(data_in1[0,:,0],linewidth=2,color='red',alpha=0.7,label=u'Señal adquirida')
 ax.set_xlabel('Tiempo [muestra]')
-ax1.set_ylabel('Intensidad [a.u.]')
-ax.set_ylabel('Intensidad [a.u.]')
+ax1.set_ylabel('Intensidad [a.u.]',color='red')
+ax.set_ylabel('Intensidad [a.u.]',color='blue')
 
-ax.set_xlim([0.383*1e7,0.39*1e7])
+ax.set_xlim([1.088*1e7,1.100*1e7])
 ax.grid(linestyle='--')
 ax.legend(loc=1)
 ax1.legend(loc=4)
@@ -473,7 +514,7 @@ if not os.path.exists(os.path.join(carpeta_salida,subcarpeta_salida)):
     os.mkdir(os.path.join(carpeta_salida,subcarpeta_salida)) 
 
 
-fig = plt.figure(figsize=(14, 7), dpi=250)
+fig = plt.figure(figsize=(14, 8), dpi=250)
 ax = fig.add_axes([.12, .12, .75, .8])
 ax.semilogy(frec_send1,fft_norm1,'-',color='blue', label=u'Potencia por chirp',alpha=0.7,linewidth=2) # por chirp
 ax.semilogy(frecs_finales,pot_salida_max,'o',color='red', label=u'Potencia por barrido',alpha=0.7,linewidth=2) # barrido
@@ -485,11 +526,10 @@ ax.set_ylim([1e-3,1e1])
 ax.set_title(u'FFT de la señal enviada y adquirida')
 ax.set_xlabel('Frecuencia [Hz]')
 ax.set_ylabel('Potencia [db]')
-ax.set_title('Potencia del conjunto emisor-receptor de la placa de audio de PC. Comparación método chirp y barrido. BW: 14.6 Hz - 20187 Hz')
+ax.set_title('Potencia del conjunto emisor-receptor. Comparación método chirp y barrido. BW: 14.6 Hz - 20187 Hz')
 ax.legend(loc=1)
 ax.grid(linewidth=0.5,linestyle='--')
 plt.show()
-
 
 
 figname = os.path.join(carpeta_salida,subcarpeta_salida, 'comparacion.png')
@@ -506,6 +546,39 @@ figname = os.path.join(carpeta_salida,subcarpeta_salida, 'comparacion_alta_frecu
 fig.savefig(figname, dpi=300)  
 plt.close(fig)
 
+
+
+fig = plt.figure(figsize=(14, 8), dpi=250)
+ax = fig.add_axes([.10, .12, .37, .8])
+ax.semilogy(frec_send1,fft_norm1,'-',color='blue', label=u'Potencia por chirp',alpha=0.7,linewidth=2) # por chirp
+ax.semilogy(frecs_finales,pot_salida_max,'o',color='red', label=u'Potencia por barrido',alpha=0.7,linewidth=2) # barrido
+
+ax.axvline(14.6,linestyle='--',color='red',alpha=0.7, label='Ancho de banda')
+ax.axvline(20187,linestyle='--',color='red',alpha=0.7)
+ax.set_xlim([-1000,28000])
+ax.set_ylim([1e-3,1e1])
+ax.set_title(u'FFT de la señal enviada y adquirida')
+ax.set_xlabel('Frecuencia [Hz]')
+ax.set_ylabel('Potencia [db]')
+ax.set_title('Potencia del conjunto emisor-receptor. Comparación método chirp y barrido. BW: 14.6 Hz - 20187 Hz')
+ax.legend(loc=1)
+ax.grid(linewidth=0.5,linestyle='--')
+
+ax1 = fig.add_axes([.58, .12, .37, .8])
+ax1.semilogy(frec_send1,fft_norm1,'-',color='blue', label=u'Potencia por chirp',alpha=0.7,linewidth=2) # por chirp
+ax1.semilogy(frecs_finales,pot_salida_max,'o',color='red', label=u'Potencia por barrido',alpha=0.7,linewidth=2) # barrido
+
+ax1.set_xlim([-100,500])
+ax1.set_ylim([1e-3,1e1])
+ax1.set_xlabel('Frecuencia [Hz]')
+ax1.set_ylabel('Potencia [db]')
+ax1.set_title('Detalle baja frecuencia')
+ax1.legend(loc=1)
+ax1.grid(linewidth=0.5,linestyle='--')
+
+figname = os.path.join(carpeta_salida,subcarpeta_salida, 'comparacion_detalle.png')
+fig.savefig(figname, dpi=300)  
+plt.close(fig)
 
 #%%
 ## COMPARACION POTENCIA EMISOR-RECEPTOR: METODO BARRIDO DE FRECUENCIAS Y RUIDO BLANCO

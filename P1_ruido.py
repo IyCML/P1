@@ -26,13 +26,14 @@ from P1_funciones import play_rec
 from P1_funciones import signalgen
 from P1_funciones import sincroniza_con_trigger
 
-params = {'legend.fontsize': 'large',
+params = {'legend.fontsize': 'x-large',
      #     'figure.figsize': (15, 5),
-         'axes.labelsize': 'large',
-         'axes.titlesize':'medium',
-         'xtick.labelsize':'large',
-         'ytick.labelsize':'large'}
+         'axes.labelsize': 'x-large',
+         'axes.titlesize':'x-large',
+         'xtick.labelsize':'x-large',
+         'ytick.labelsize':'x-large'}
 pylab.rcParams.update(params)
+
 
 
 
@@ -91,8 +92,8 @@ if not os.path.exists(os.path.join(carpeta_salida,subcarpeta_salida)):
     os.mkdir(os.path.join(carpeta_salida,subcarpeta_salida))  
 
 
-calibracion_CH0_seno = np.load(os.path.join('Calibracion',dato, 'Seno_CH0_wp'+ str(windows_nivel[ind_nivel]) +  '_wm'+str(mic_level)+'_'+dato+'_ajuste.npy'))
-calibracion_CH1_seno = np.load(os.path.join('Calibracion',dato, 'Seno_CH1_wp'+ str(windows_nivel[ind_nivel]) +  '_wm'+str(mic_level)+'_'+dato+'_ajuste.npy'))
+calibracion_CH0_seno = np.load(os.path.join('Calibracion',dato, 'Seno_CH0' +  '_wm'+str(mic_level)+'_'+dato+'_ajuste.npy'))
+calibracion_CH1_seno = np.load(os.path.join('Calibracion',dato, 'Seno_CH1'+   '_wm'+str(mic_level)+'_'+dato+'_ajuste.npy'))
 
 
 # Realiza medicion
@@ -102,6 +103,8 @@ data_in, retardos = play_rec(fs,input_channels,data_out,'si',offset_correlacion,
 
 np.save(os.path.join(carpeta_salida,subcarpeta_salida, 'data_out'),data_out)
 np.save(os.path.join(carpeta_salida,subcarpeta_salida, 'data_in'),data_in)
+
+#%%
 
 data_out = np.load(os.path.join(carpeta_salida,subcarpeta_salida, 'data_out.npy'))
 data_in = np.load(os.path.join(carpeta_salida,subcarpeta_salida, 'data_in.npy'))
@@ -124,7 +127,7 @@ np.std(data_in_cal_med[:,1])
 label0='CH0 - STD: ' + '{:6.3f}'.format(np.std(data_in_cal_med[:,0]*1000)) + ' mV -' + '{:6.1f}'.format(np.std(data_in_med[:,0])) + ' cuentas'
 label1='CH1 - STD: ' + '{:6.3f}'.format(np.std(data_in_cal_med[:,1]*1000)) + ' mV -' + '{:6.1f}'.format(np.std(data_in_med[:,1])) + ' cuentas'
 
-fig = plt.figure(figsize=(14, 7), dpi=250)
+fig = plt.figure(figsize=(14, 8), dpi=250)
 ax = fig.add_axes([.12, .15, .75, .8])
 ax.hist(data_in_cal_med[:,0],bins=10,rwidth=0.9,label=label0,alpha=0.7,align ='mid')
 ax.grid(linestyle='--')
@@ -137,7 +140,7 @@ fig.savefig(figname, dpi=300)
 plt.close(fig)
 
 
-fig = plt.figure(figsize=(14, 7), dpi=250)
+fig = plt.figure(figsize=(14, 8), dpi=250)
 ax = fig.add_axes([.12, .15, .75, .8])
 ax.hist(data_in_med[:,0],bins=10,rwidth=0.9,label=label0,alpha=0.7,align ='mid')
 ax.grid(linestyle='--')
@@ -150,7 +153,31 @@ fig.savefig(figname, dpi=300)
 plt.close(fig)
 
 
-fig = plt.figure(figsize=(14, 7), dpi=250)
+
+fig = plt.figure(figsize=(14, 8), dpi=250)
+ax = fig.add_axes([.12, .15, .35, .8])
+ax.hist(data_in_cal_med[:,0]*1000,bins=10,rwidth=0.9,label=label1,alpha=0.7,align ='mid')
+ax.grid(linestyle='--')
+ax.set_xlabel(u'Tensión [mV]')
+ax.set_ylabel(u'Frecuencia [cts.]')
+ax.legend()
+ax.set_title(u'Histograma de ruido en tensión del CH0')
+
+ax1 = fig.add_axes([.58, .15, .35, .8])
+ax1.hist(data_in_med[:,0],bins=10,rwidth=0.9,label=label1,alpha=0.7,align ='mid')
+ax1.grid(linestyle='--')
+ax1.set_xlabel(u'Cuentas')
+ax1.set_ylabel(u'Frecuencia [cts.]')
+ax1.legend()
+ax1.set_title(u'Histograma de ruido en cuentas del CH0')
+figname = os.path.join(carpeta_salida,subcarpeta_salida, 'ruido_cuentas_v_ch0.png')
+fig.savefig(figname, dpi=300)  
+plt.close(fig)
+
+######
+
+
+fig = plt.figure(figsize=(14, 8), dpi=250)
 ax = fig.add_axes([.12, .15, .75, .8])
 ax.hist(data_in_cal_med[:,1],bins=10,rwidth=0.9,label=label1,alpha=0.7,align ='mid')
 ax.grid(linestyle='--')
@@ -163,7 +190,7 @@ fig.savefig(figname, dpi=300)
 plt.close(fig)
 
 
-fig = plt.figure(figsize=(14, 7), dpi=250)
+fig = plt.figure(figsize=(14, 8), dpi=250)
 ax = fig.add_axes([.12, .15, .75, .8])
 ax.hist(data_in_med[:,1],bins=10,rwidth=0.9,label=label1,alpha=0.7,align ='mid')
 ax.grid(linestyle='--')
@@ -172,6 +199,28 @@ ax.set_ylabel(u'Frecuencia [cts.]')
 ax.legend()
 ax.set_title(u'Histograma de ruido en cuentas del CH1')
 figname = os.path.join(carpeta_salida,subcarpeta_salida, 'ruido_cuentas_ch1.png')
+fig.savefig(figname, dpi=300)  
+plt.close(fig)
+
+
+
+fig = plt.figure(figsize=(14, 8), dpi=250)
+ax = fig.add_axes([.12, .15, .35, .8])
+ax.hist(data_in_cal_med[:,1]*1000,bins=10,rwidth=0.9,label=label1,alpha=0.7,align ='mid')
+ax.grid(linestyle='--')
+ax.set_xlabel(u'Tensión [mV]')
+ax.set_ylabel(u'Frecuencia [cts.]')
+ax.legend()
+ax.set_title(u'Histograma de ruido en tensión del CH1')
+
+ax1 = fig.add_axes([.58, .15, .35, .8])
+ax1.hist(data_in_med[:,1],bins=10,rwidth=0.9,label=label1,alpha=0.7,align ='mid')
+ax1.grid(linestyle='--')
+ax1.set_xlabel(u'Cuentas')
+ax1.set_ylabel(u'Frecuencia [cts.]')
+ax1.legend()
+ax1.set_title(u'Histograma de ruido en cuentas del CH1')
+figname = os.path.join(carpeta_salida,subcarpeta_salida, 'ruido_cuentas_v_ch1.png')
 fig.savefig(figname, dpi=300)  
 plt.close(fig)
 
@@ -248,8 +297,8 @@ for i,mic_level in enumerate(mic_levels):
     data_out = np.load(os.path.join(carpeta_salida,subcarpeta_salida, 'data_out_'+str(mic_level)+'.npy'))
     data_in = np.load(os.path.join(carpeta_salida,subcarpeta_salida, 'data_in_'+str(mic_level)+'.npy'))
     
-    calibracion_CH0_seno = np.load(os.path.join('Calibracion',dato, 'Seno_CH0_wp'+ str(windows_nivel[ind_nivel]) +  '_wm'+str(mic_level)+'_'+dato+'_ajuste.npy'))
-    calibracion_CH1_seno = np.load(os.path.join('Calibracion',dato, 'Seno_CH1_wp'+ str(windows_nivel[ind_nivel]) +  '_wm'+str(mic_level)+'_'+dato+'_ajuste.npy'))
+    calibracion_CH0_seno = np.load(os.path.join('Calibracion',dato, 'Seno_CH0'+  '_wm'+str(mic_level)+'_'+dato+'_ajuste.npy'))
+    calibracion_CH1_seno = np.load(os.path.join('Calibracion',dato, 'Seno_CH1' +  '_wm'+str(mic_level)+'_'+dato+'_ajuste.npy'))
     
     
     # Calibracion de los canales
@@ -269,7 +318,7 @@ for i,mic_level in enumerate(mic_levels):
 
 mic_levels_array = np.asarray(mic_levels)
 
-fig = plt.figure(figsize=(14, 7), dpi=250)
+fig = plt.figure(figsize=(14, 8), dpi=250)
 ax = fig.add_axes([.12, .15, .75, .8])
 ax1=ax.twinx()
 ax.plot(mic_levels_array,std_ch0_cts,'o',color='blue',alpha=0.7,label='STD [cuentas]',markersize=10)
@@ -285,7 +334,7 @@ figname = os.path.join(carpeta_salida,subcarpeta_salida, 'ruido_nivel_microfono_
 fig.savefig(figname, dpi=300)  
 plt.close(fig)
 
-fig = plt.figure(figsize=(14, 7), dpi=250)
+fig = plt.figure(figsize=(14, 8), dpi=250)
 ax = fig.add_axes([.12, .15, .75, .8])
 ax1=ax.twinx()
 ax.plot(mic_levels_array,std_ch1_cts,'o',color='blue',alpha=0.7,label='STD [cuentas]',markersize=10)
@@ -406,7 +455,7 @@ for i,mic_level in enumerate(mic_levels):
 mic_levels_array = np.asarray(mic_levels)
 
 
-fig = plt.figure(figsize=(14, 7), dpi=250)
+fig = plt.figure(figsize=(14, 8), dpi=250)
 ax = fig.add_axes([.12, .15, .75, .8])
 ax.semilogy(mic_levels_array,snr_ch0s,'o',color='blue',alpha=0.7,label='STD [cuentas]',markersize=10)
 ax.set_ylim([1e9,1e13])
@@ -420,7 +469,7 @@ plt.close(fig)
 
 
 
-fig = plt.figure(figsize=(14, 7), dpi=250)
+fig = plt.figure(figsize=(14, 8), dpi=250)
 ax = fig.add_axes([.12, .15, .75, .8])
 ax.semilogy(frec_acq,fft_acq_ch1)
 ax.legend(bbox_to_anchor=(1.05, 1.00))
@@ -519,7 +568,7 @@ med = 1
 std_ch0 = np.array([])
 std_ch1 = np.array([])
 
-fig = plt.figure(figsize=(14, 7), dpi=250)
+fig = plt.figure(figsize=(14, 8), dpi=250)
 ax = fig.add_axes([.12, .15, .65, .8])
 
 for i in range(0,len(factor),2):
@@ -620,7 +669,7 @@ frecuencia = factor_array*fs_base
 frec_esp = fs_base*8/vec_promedios
 
 
-fig = plt.figure(figsize=(14, 7), dpi=250)
+fig = plt.figure(figsize=(14, 8), dpi=250)
 ax = fig.add_axes([.12, .15, .75, .8])
 ax.plot(frecuencia,std_ch1,'o',markersize=10,label='STD cambiando frec sampleo')    
 ax.plot(frec_esp,std_ch1_conv,'-',markersize=10,label='STD dato filtrado')    
