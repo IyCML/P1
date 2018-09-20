@@ -25,10 +25,11 @@ from P1_funciones import play_rec
 from P1_funciones import signalgen
 from P1_funciones import sincroniza_con_trigger
 
-params = {'legend.fontsize': 24,
-     'figure.figsize': (14, 9),
+params = {'legend.fontsize': 14,
+          'figure.figsize': (14, 9),
          'axes.labelsize': 24,
-         'axes.titlesize':24,
+         'axes.titlesize':18,
+         'font.size':18,
          'xtick.labelsize':24,
          'ytick.labelsize':24}
 pylab.rcParams.update(params)
@@ -159,7 +160,7 @@ snr_ch1 = fft_acq_ch1[frec_testeo_ind1]/np.mean(fft_acq_ch1[frec_comparacion_ind
 snr_ch0/snr_ch1
 
 fig = plt.figure(dpi=250)
-ax = fig.add_axes([.12, .12, .75, .8])
+ax = fig.add_axes([.15, .15, .75, .8])
 ax.semilogy(frec_acq,fft_acq_ch0,'-',color='blue', label=u'Canal con señal - SNR: ' + '{:6.1e}'.format(snr_ch0),alpha=0.7)
 ax.semilogy(frec_acq,fft_acq_ch1,'-',color='red', label=u'Canal sin señal - SNR: ' + '{:6.1e}'.format(snr_ch1),alpha=0.7)
 ax.set_xlim([1010,1040])

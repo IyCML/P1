@@ -56,8 +56,8 @@ amplitud_v_chs = np.array([amplitud_v_ch0,amplitud_v_ch1])
 #%%
 
 # Genero matriz de señales: ejemplo de barrido en frecuencias en el canal 0
-ind_nivel = 6
-mic_level = 70    
+ind_nivel = 2
+mic_level = 100    
 
 dato = 'int16'    
 fs = 44100*8  
@@ -115,8 +115,8 @@ if not os.path.exists(carpeta_salida):
 if not os.path.exists(os.path.join(carpeta_salida,subcarpeta_salida)):
     os.mkdir(os.path.join(carpeta_salida,subcarpeta_salida))  
     
-ind_nivel = 6
-mic_level = 70    
+ind_nivel = 2
+mic_level = 100    
 
 calibracion_CH0_seno = np.load(os.path.join('Calibracion',dato, 'Seno_CH0' +  '_wm'+str(mic_level)+'_'+dato+'_ajuste.npy'))
 calibracion_CH1_seno = np.load(os.path.join('Calibracion',dato, 'Seno_CH1'+   '_wm'+str(mic_level)+'_'+dato+'_ajuste.npy'))
@@ -246,7 +246,7 @@ plt.close(fig)
 
 
 # Genero matriz de señales: ejemplo de barrido en frecuencias en el canal 0
-ind_nivel = 6
+ind_nivel = 2
 mic_level = 100    
 
 dato = 'int16'    

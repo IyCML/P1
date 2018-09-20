@@ -381,7 +381,7 @@ plt.close(fig)
 
 carpeta_salida = 'CurvaDiodo'
 subcarpeta_salida = 'RecoveryTime'
-subsubcarpeta_salida = 'UF4007'
+subsubcarpeta_salida = '1N4007'
 
 if not os.path.exists(carpeta_salida):
     os.mkdir(carpeta_salida)
@@ -444,7 +444,7 @@ np.save(os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpeta_salida, 'dat
 #%%
 carpeta_salida = 'CurvaDiodo'
 subcarpeta_salida = 'RecoveryTime'
-subsubcarpeta_salida = 'UF4007'
+subsubcarpeta_salida = '1N4007'
 
 
 
@@ -485,7 +485,7 @@ data_in_0 = np.load(os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpeta_
 
 # Calibracion de los canales
 data_in_0[:,:,0] = (data_in_0[:,:,0]-calibracion_CH0_seno[1])/(calibracion_CH0_seno[0])
-data_in_0[:,:,1] = (data_in_0[:,:,1]-calibracion_CH1_seno[1])/(calibracion_CH1_seno[0])+0.2-0.0070+0.005
+data_in_0[:,:,1] = (data_in_0[:,:,1]-calibracion_CH1_seno[1])/(calibracion_CH1_seno[0])+0.2-0.0070+0.0065
 
 subsubcarpeta_salida = '1N4148'
 
@@ -494,7 +494,7 @@ data_in_1 = np.load(os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpeta_
 
 # Calibracion de los canales
 data_in_1[:,:,0] = (data_in_1[:,:,0]-calibracion_CH0_seno[1])/(calibracion_CH0_seno[0])
-data_in_1[:,:,1] = (data_in_1[:,:,1]-calibracion_CH1_seno[1])/(calibracion_CH1_seno[0])+0.2-0.0070+0.005
+data_in_1[:,:,1] = (data_in_1[:,:,1]-calibracion_CH1_seno[1])/(calibracion_CH1_seno[0])+0.2-0.0070+0.0045
 
 tiempo_0 = np.linspace(0,data_in_0.shape[1]-1,data_in_0.shape[1])/fs
 tiempo_1 = np.linspace(0,data_in_1.shape[1]-1,data_in_1.shape[1])/fs
@@ -506,7 +506,7 @@ data_in_2 = np.load(os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpeta_
 
 # Calibracion de los canales
 data_in_2[:,:,0] = (data_in_2[:,:,0]-calibracion_CH0_seno[1])/(calibracion_CH0_seno[0])
-data_in_2[:,:,1] = (data_in_2[:,:,1]-calibracion_CH1_seno[1])/(calibracion_CH1_seno[0])+0.2-0.0070+0.0105
+data_in_2[:,:,1] = (data_in_2[:,:,1]-calibracion_CH1_seno[1])/(calibracion_CH1_seno[0])+0.2-0.0070+0.0107
 
 tiempo_0 = np.linspace(0,data_in_0.shape[1]-1,data_in_0.shape[1])/fs
 tiempo_1 = np.linspace(0,data_in_1.shape[1]-1,data_in_1.shape[1])/fs
@@ -548,7 +548,7 @@ plt.close(fig)
 
 #%% Temperatura
 
-diodo = '1N4148'
+diodo = '1N4007'
 carpeta_salida = 'CurvaDiodo'
 subcarpeta_salida = 'Temperatura'
 subsubcarpeta_salida = diodo
@@ -611,3 +611,109 @@ data_in, retardos = play_rec(fs,input_channels,data_out,'si',offset_correlacion,
 
 np.save(os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpeta_salida, 'data_out'+str(temp)),data_out)
 np.save(os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpeta_salida, 'data_in'+str(temp)),data_in)
+
+
+#%%
+
+diodo = '1N4007'
+carpeta_salida = 'CurvaDiodo'
+subcarpeta_salida = 'Temperatura'
+subsubcarpeta_salida = diodo
+temps = [21,37]
+
+resistencia = 84
+delay = 3
+med = 1
+offset = 0.175 #R150
+
+caida_diodo_cre_tot = []
+caida_diodo_dec_tot = []
+i_res_cre_tot = []
+i_res_dec_tot = []
+
+for temp in temps:
+
+    data_out = np.load(os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpeta_salida, 'data_out'+str(temp)+'.npy'))
+    data_in = np.load(os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpeta_salida, 'data_in'+str(temp)+'.npy'))
+    
+    calibracion_CH0_seno = np.load(os.path.join('Calibracion',dato, 'Seno_CH0' +  '_wm'+str(mic_level)+'_'+dato+'_ajuste.npy'))
+    calibracion_CH1_seno = np.load(os.path.join('Calibracion',dato, 'Seno_CH1' + '_wm'+str(mic_level)+'_'+dato+'_ajuste.npy'))
+    
+    # Calibracion de los canales
+    data_in[:,:,0] = (data_in[:,:,0]-calibracion_CH0_seno[1])/(calibracion_CH0_seno[0])
+    data_in[:,:,1] = (data_in[:,:,1]-calibracion_CH1_seno[1])/(calibracion_CH1_seno[0])
+    
+    
+    caida_tot = data_in[0,int(fs*delay):int(fs*(delay+med)),0]
+    caida_res = data_in[0,int(fs*delay):int(fs*(delay+med)),1] +offset#+ np.max(data_in[0,int(fs*delay):int(fs*(delay+med)),1])
+    tiempo = np.arange(data_in.shape[1])/fs
+    tiempo = tiempo[int(fs*delay):int(fs*(delay+med))]
+    caida_diodo = caida_tot - caida_res
+    i_res = caida_res/resistencia
+    
+    
+    # Seno creciente y decreciente
+    ind_cre = np.diff(data_out[0,int(fs*delay):int(fs*(delay+med)),0]) < 0
+    ind_dec = np.diff(data_out[0,int(fs*delay):int(fs*(delay+med)),0]) > 0
+    
+    #ole = data_out[0,int(fs*delay):int(fs*(delay+med))-1,0]
+    #plt.plot(ole[ind_dec],'.')
+    
+    caida_diodo_cre = caida_diodo[1:]
+    caida_diodo_cre = caida_diodo_cre[ind_cre]
+    caida_diodo_dec = caida_diodo[1:]
+    caida_diodo_dec = caida_diodo_dec[ind_dec]
+    
+    i_res_cre = i_res[:-1]
+    i_res_cre = i_res_cre[ind_cre]
+    i_res_dec = i_res[:-1]
+    i_res_dec = i_res_dec[ind_dec]
+
+
+    caida_diodo_cre_tot.append(caida_diodo_cre)
+    caida_diodo_dec_tot.append(caida_diodo_dec)
+    
+    i_res_cre_tot.append(i_res_cre)
+    i_res_dec_tot.append(i_res_dec)
+
+
+
+
+fig = plt.figure(dpi=250)
+ax = fig.add_axes([.15, .15, .75, .8])    
+
+for i in range(len(temps)): 
+    caida_diodo_cre = caida_diodo_cre_tot[i]
+    i_res_cre = i_res_cre_tot[i]   
+    ax.plot(caida_diodo_cre,i_res_cre*1000,'.',label='Temp: ' +str(temps[i])+' °C',alpha=0.8)
+
+ax.legend()
+ax.grid(linestyle='--')
+ax.set_xlabel(u'Tensión diodo [V]')
+ax.set_ylabel(u'Corriente diodo [mA]')
+ax.set_xlim([-0,1])
+ax.set_ylim([-1,11])
+ax.set_title('Curva del diodo con flaco creciente para '+diodo+' a distintas temperaturas')
+figname = os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpeta_salida, 'curva_diodo_creciente_temperatura.png')
+fig.savefig(figname, dpi=300)  
+plt.close(fig)
+
+
+fig = plt.figure(dpi=250)
+ax = fig.add_axes([.15, .15, .75, .8])    
+
+for i in range(len(temps)): 
+    caida_diodo_dec = caida_diodo_dec_tot[i]
+    i_res_dec = i_res_dec_tot[i]   
+    ax.semilogy(caida_diodo_dec,i_res_dec*1000,'.',label='Temp: ' +str(temps[i])+' °C',alpha=0.8)
+
+ax.legend()
+ax.grid(linestyle='--')
+ax.set_xlabel(u'Tensión diodo [V]')
+ax.set_ylabel(u'Corriente diodo [mA]')
+ax.set_xlim([-0,1])
+ax.set_ylim([-1,11])
+ax.set_title('Curva del diodo con flaco creciente para '+diodo+' a distintas temperaturas')
+figname = os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpeta_salida, 'curva_diodo_decreciente_temperatura.png')
+fig.savefig(figname, dpi=300)  
+plt.close(fig)
