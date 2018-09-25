@@ -554,7 +554,12 @@ for i in range(len(factor)):
 #%%
 
 ind_nivel = 6
-mic_level = 70    
+mic_level = 70  
+
+calibracion_CH0_seno = np.load(os.path.join('Calibracion','int16', 'Seno_CH0'+  '_wm'+str(mic_level)+'_'+dato+'_ajuste.npy'))
+calibracion_CH1_seno = np.load(os.path.join('Calibracion','int16', 'Seno_CH1'+   '_wm'+str(mic_level)+'_'+dato+'_ajuste.npy'))
+
+
 
 dato = 'int16'    
 fs_base = 44100  
@@ -593,6 +598,11 @@ for i in range(0,len(factor),2):
     
     data_out = np.load(os.path.join(carpeta_salida,subcarpeta_salida, 'data_out_'+str(i)+'.npy'))
     data_in = np.load(os.path.join(carpeta_salida,subcarpeta_salida, 'data_in_'+str(i)+'.npy'))    
+    
+    # Calibracion de los canales
+    data_in[:,:,0] = (data_in[:,:,0]-calibracion_CH0_seno[1])/(calibracion_CH0_seno[0])
+    data_in[:,:,1] = (data_in[:,:,1]-calibracion_CH1_seno[1])/(calibracion_CH1_seno[0])    
+    
     
     data_in = data_in[:,int(fs*delay):int(fs*(delay+med)),:]  
     std_ch0 = np.append(std_ch0,np.std(data_in[0,:,0]))
