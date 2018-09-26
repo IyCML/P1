@@ -758,7 +758,7 @@ subcarpeta_salida = 'Amplificador'
 subsubcarpeta_salida = 'Respuesta_-5V'
 
 R2 = 100000
-R1s = [330,386,464,558,667,775,994,1200,1316,1451,1545,1760,2170,3210,4700,6560,8080,9700,14070,20070,29100,48100,62000,100000]
+R1s = [271,330,386,464,558,667,775,994,1200,1316,1451,1545,1760,2170,3210,4700,6560,8080,9700,14070,20070,29100,48100,62000,100000]
 
 dato = 'int16'    
 fs = 44100*8  
@@ -775,7 +775,7 @@ n = 20
 frec_comp_bw = [200,21000]
 ancho_de_banda = []
 
-frec_comp_ganancia = [200,1000,3000,5000,10000,15000]
+frec_comp_ganancia = [200,2000,3500,5000,10000,15000]
 ganancia = {}
 frec_ind_send_ganancia = {}
 for j in range(len(frec_comp_ganancia)):
@@ -992,7 +992,9 @@ for j in range(len(frec_comp_ganancia)):
 #        ax.text(0.1,0.8,'Ajuste: ax + b',color=cmap(float(j)/len(frec_comp_ganancia)), transform=ax.transAxes)
 #        ax.text(0.1,0.75,'a: ' '{:6.3f}'.format(ajuste_lineal_ganancia[0]),color=cmap(float(j)/len(frec_comp_ganancia)), transform=ax.transAxes)
 #        ax.text(0.1,0.70,'b: ' '{:6.3f}'.format(ajuste_lineal_ganancia[1]),color=cmap(float(j)/len(frec_comp_ganancia)), transform=ax.transAxes)
-    
+
+ax.set_xlim([0,400])    
+ax.set_ylim([0,400])    
 ax.set_title(u'Ganancia vs R2/R1')
 ax.set_xlabel('R2/R1')
 ax.set_ylabel('Ganancia')
@@ -1008,6 +1010,7 @@ ax1.set_xlabel('R2/R1')
 ax1.set_ylabel('Ancho de banda [Hz]')
 ax1.legend(loc=1)
 ax1.grid(linewidth=0.5,linestyle='--')
+ax1.set_xlim([0,400])    
 
 figname = os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpeta_salida, 'ganancia_ancho_de_banda.png')
 fig.savefig(figname, dpi=300)  
@@ -1017,21 +1020,26 @@ plt.close(fig)
 
 fig = plt.figure(dpi=250)
 ax = fig.add_axes([.10, .15, .35, .8])
-j = 1
-ganancia_array = np.asarray(ganancia[j])
-ax.plot(ancho_de_banda_array,ganancia_array,'o',color=cmap(float(j)/len(frec_comp_ganancia)),label=str(frec_comp_ganancia[j]) + ' Hz',markersize=10)
-ax.axhline(50,linestyle='--',color='red',label='Ancho de banda medición')
-    
+j = 0
+
+for j in range(len(frec_comp_ganancia)):
+    ganancia_array = np.asarray(ganancia[j])
+    ax.plot(ancho_de_banda_array,ganancia_array,'o',color=cmap(float(j)/len(frec_comp_ganancia)),label=str(frec_comp_ganancia[j]) + ' Hz',markersize=10)
+ax.axvline(20000,linestyle='--',color='red',label='Ancho de banda medición')
+   
+ax.set_ylim([0,400])     
 ax.set_title(u'Ganancia vs Ancho de banda')
 ax.set_xlabel('Ancho de banda [Hz]')
 ax.set_ylabel('Ganancia')
 ax.legend(loc=1)
 ax.grid(linewidth=0.5,linestyle='--')
 
-
+j = 0
+ganancia_array = np.asarray(ganancia[j])
 ax1 = fig.add_axes([.60, .15, .35, .8])
 ax1.plot(ganancia_array,ganancia_array*ancho_de_banda_array/1000000,'o',color=cmap(float(j)/len(frec_comp_ganancia)),markersize=10,label=str(frec_comp_ganancia[j]) + ' Hz')
 ax1.axvline(50,linestyle='--',color='red',label='Ancho de banda medición')
+ax1.set_xlim([0,400])     
 ax1.set_title(u'Ganancia*BW vs Ganancia')
 ax1.set_xlabel('Ganancia')
 ax1.set_ylabel('Ganancia*Ancho de banda [MHz]')
@@ -1102,3 +1110,9 @@ ancho_de_banda_array = np.asarray(ancho_de_banda)
 
 plt.plot(std_ruido_input,'o')
 plt.plot(R2/R1s_array,std_ruido_output/std_ruido_input,'o')
+
+
+
+#%% SNR y FIGURE NOISE
+
+
