@@ -29,6 +29,8 @@ from P1_funciones import play_rec
 from P1_funciones import signalgen
 from P1_funciones import signalgen_corrected
 from P1_funciones import sincroniza_con_trigger
+from P1_funciones import par2ind
+
 
 params = {'legend.fontsize': 14,
           'figure.figsize': (14, 9),
@@ -41,15 +43,17 @@ pylab.rcParams.update(params)
 
 
 
+
 #%%
-
-windows_nivel = np.array([10,20,30,40,50,60,70,80,90,100])
-tension_rms_v_ch0 = np.array([0.050, 0.142, 0.284, 0.441, 0.678, 0.884, 1.143, 1.484, 1.771, 2.280])
-amplitud_v_ch0 = tension_rms_v_ch0*np.sqrt(2)
-tension_rms_v_ch1 = np.array([0.050, 0.146, 0.291, 0.451, 0.693, 0.904, 1.170, 1.518, 1.812, 2.330])
-amplitud_v_ch1 = tension_rms_v_ch1*np.sqrt(2)
-
+carpeta_salida = 'Calibracion'
+subcarpeta_salida = 'Parlante'
+# Calibracion parlante
+amplitud_v_ch0 = np.load(os.path.join(carpeta_salida,subcarpeta_salida, 'wp_amp_ch0.npy'))
+amplitud_v_ch1 = np.load(os.path.join(carpeta_salida,subcarpeta_salida, 'wp_amp_ch1.npy'))
+parlante_levels = np.load(os.path.join(carpeta_salida,subcarpeta_salida, 'parlante_levels.npy'))
 amplitud_v_chs = np.array([amplitud_v_ch0,amplitud_v_ch1])
+
+mic_levels = [10,20,30,40,50,60,70,80,90,100]
 
 #%%
 
@@ -73,7 +77,8 @@ if not os.path.exists(os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpet
 
 # Genero matriz de señales: ejemplo de barrido en frecuencias en el canal 0
 dato = 'int16'    
-ind_nivel = 9
+par_level = 100
+ind_nivel = par2ind(par_level,parlante_levels)
 mic_level = 70
 fs = 44100*8  
 duracion = 5
@@ -127,6 +132,13 @@ subcarpeta_salida = 'Curvas'
 subsubcarpeta_salida = diodo
 frec_ini = 500
 frec_fin = 500
+
+dato = 'int16'    
+par_level = 100
+ind_nivel = par2ind(par_level,parlante_levels)
+mic_level = 70
+fs = 44100*8  
+
 
 data_out = np.load(os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpeta_salida, 'data_out.npy'))
 data_in = np.load(os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpeta_salida, 'data_in.npy'))
@@ -184,7 +196,7 @@ ax.set_xlabel(u'Tensión diodo [V]')
 ax.set_ylabel(u'Corriente diodo [mA]')
 ax.set_xlim([-1.5,1])
 ax.set_ylim([-1,11])
-ax.set_title('Curva del diodo '+diodo+' utilizando un seno de '+str(frec_ini)+' Hz')
+#ax.set_title('Curva del diodo '+diodo+' utilizando un seno de '+str(frec_ini)+' Hz')
 figname = os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpeta_salida, 'curva_diodo_'+diodo+'_'+str(resistencia)+'_'+str(temp)+'C_'+str(frec_ini)+'hz.png')
 fig.savefig(figname, dpi=300)  
 plt.close(fig)
@@ -216,16 +228,16 @@ ax.plot(caida_diodo_cre_uno,i_res_cre_uno*1000,'.',label='Flanco creciente',alph
 ax.plot(caida_diodo_cre_uno,func_exp(caida_diodo_cre_uno, *popt_cre)*1000,'--',label='Ajuste Flanco creciente',alpha=0.9)
 #ax.plot(caida_diodo_dec_uno,func_exp(caida_diodo_dec_uno, *popt_dec)*1000,'--',label='Ajuste Flanco decreciente',alpha=0.7)
 ax.text(0.1,0.8,'Ajuste: a*exp(x/b) + c', transform=ax.transAxes)
-ax.text(0.1,0.75,'a: ' '{:6.2e}'.format(popt_cre[0]) + ' [A]', transform=ax.transAxes)
-ax.text(0.1,0.70,'b: ' '{:6.2e}'.format(popt_cre[1]) + ' [V]', transform=ax.transAxes)
-ax.text(0.1,0.65,'c: ' '{:6.2e}'.format(popt_cre[2]) + ' [A]', transform=ax.transAxes)
+ax.text(0.1,0.75,'a: ' '{:6.2e}'.format(popt_cre[0]) + ' [A]', transform=ax.transAxes,backgroundcolor=[1.0,1.0,1.0])
+ax.text(0.1,0.70,'b: ' '{:6.2e}'.format(popt_cre[1]) + ' [V]', transform=ax.transAxes,backgroundcolor=[1.0,1.0,1.0])
+ax.text(0.1,0.65,'c: ' '{:6.2e}'.format(popt_cre[2]) + ' [A]', transform=ax.transAxes,backgroundcolor=[1.0,1.0,1.0])
 ax.legend()
 ax.grid(linestyle='--')
 ax.set_xlabel(u'Tensión diodo [V]')
 ax.set_ylabel(u'Corriente diodo [mA]')
 ax.set_xlim([-1.6,1])
 ax.set_ylim([-1,11])
-ax.set_title('Curva del diodo '+diodo+' utilizando un seno de '+str(frec_ini)+' Hz y ajuste')
+#ax.set_title('Curva del diodo '+diodo+' utilizando un seno de '+str(frec_ini)+' Hz y ajuste')
 figname = os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpeta_salida, 'ajuste_diodo_'+diodo+'_'+str(resistencia)+'_'+str(temp)+'C_'+str(frec_ini)+'hz.png')
 fig.savefig(figname, dpi=300)  
 plt.close(fig)
@@ -239,11 +251,11 @@ ax.plot(tiempo,caida_diodo,'-',label=u'Tensión diodo',alpha=0.8,linewidth=2)
 ax.plot(tiempo,caida_res,'-',label=u'Tensión resistencia',alpha=0.8,linewidth=2)
 ax.legend()
 ax.grid(linestyle='--')
-ax.set_xlabel(u'Tiempo [seg]')
+ax.set_xlabel(u'Tiempo [s]')
 ax.set_ylabel(u'Tensión [V]')
 ax.set_xlim([delay+0.1,delay+0.11])
 ax.set_ylim([-1.5,1.5])
-ax.set_title(u'Caida de tensión en diodo y resistencia '+diodo+' utilizando un seno de '+str(frec_ini)+' Hz')
+#ax.set_title(u'Caida de tensión en diodo y resistencia '+diodo+' utilizando un seno de '+str(frec_ini)+' Hz')
 figname = os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpeta_salida, 'caida_diodo_res_'+diodo+'_'+str(resistencia)+'_'+str(temp)+'C_'+str(frec_ini)+'hz.png')
 fig.savefig(figname, dpi=300)  
 plt.close(fig)
@@ -279,9 +291,9 @@ ax.plot(tiempo,caida_res,'-',label=u'Tensión resistencia medida',alpha=0.8,line
 ax.plot(tiempo,caida_res+offset,'-',label=u'Tensión resistencia corregida',alpha=0.8,linewidth=2)
 ax.legend()
 ax.grid(linestyle='--')
-ax.set_xlabel(u'Tiempo [seg]')
+ax.set_xlabel(u'Tiempo [s]')
 ax.set_ylabel(u'Tensión [V]')
-ax.set_xlim([delay+0.1,delay+0.11])
+ax.set_xlim([delay+0.1,delay+0.106])
 ax.set_ylim([-1.0,1.0])
 
 ax1 = fig.add_axes([.60, .15, .32, .8])
@@ -314,11 +326,11 @@ ax.plot(tiempo,caida_diodo,'-',label=u'Tensión diodo',alpha=0.8,linewidth=2)
 ax.plot(tiempo,caida_res,'-',label=u'Tensión resistencia',alpha=0.8,linewidth=2)
 ax.legend()
 ax.grid(linestyle='--')
-ax.set_xlabel(u'Tiempo [seg]')
+ax.set_xlabel(u'Tiempo [s]')
 ax.set_ylabel(u'Tensión [V]')
 ax.set_xlim([delay+0.0,delay+0.10])
 ax.set_ylim([-1.5,1.5])
-ax.set_title(u'Caida de tensión en diodo y resistencia '+diodo+' utilizando un seno de '+str(frec_ini)+' Hz. Sin corrección de offset.')
+#ax.set_title(u'Caida de tensión en diodo y resistencia '+diodo+' utilizando un seno de '+str(frec_ini)+' Hz. Sin corrección de offset.')
 figname = os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpeta_salida, 'caida_diodo_res_'+diodo+'_'+str(resistencia)+'_'+str(temp)+'C_'+str(frec_ini)+'hz_sin_corregir_offset.png')
 fig.savefig(figname, dpi=300)  
 plt.close(fig)
@@ -362,18 +374,18 @@ ax.plot(tiempo,caida_tot,'-',label=u'Tensión Diodo + Resistencia',alpha=0.8,lin
 ax.plot(tiempo,caida_res ,'-',label=u'Tensión resistencia',alpha=0.8,linewidth=2)
 ax.plot(tiempo_offset,func_exp(tiempo_offset, *popt_fit),'--',color='red',label='Ajuste caida')
 
-ax.text(0.7,0.9,'Ajuste: a*exp(x/b) + c', transform=ax.transAxes)
-ax.text(0.7,0.85,'a: ' '{:6.2e}'.format(popt_fit[0]) + ' [V]', transform=ax.transAxes)
-ax.text(0.7,0.80,'b: ' '{:6.2e}'.format(-popt_fit[1]) + ' [sec]', transform=ax.transAxes)
-ax.text(0.7,0.75,'c: ' '{:6.2e}'.format(popt_fit[2]) + ' [V]', transform=ax.transAxes)
+ax.text(0.7,0.9,'Ajuste: a*exp(x/b) + c', transform=ax.transAxes,backgroundcolor=[1.0,1.0,1.0])
+ax.text(0.7,0.85,'a: ' '{:6.2e}'.format(popt_fit[0]) + ' [V]', transform=ax.transAxes,backgroundcolor=[1.0,1.0,1.0])
+ax.text(0.7,0.80,'b: ' '{:6.2e}'.format(-popt_fit[1]) + ' [sec]', transform=ax.transAxes,backgroundcolor=[1.0,1.0,1.0])
+ax.text(0.7,0.75,'c: ' '{:6.2e}'.format(popt_fit[2]) + ' [V]', transform=ax.transAxes,backgroundcolor=[1.0,1.0,1.0])
 
 ax.legend()
 ax.grid(linestyle='--')
-ax.set_xlabel(u'Tiempo [seg]')
+ax.set_xlabel(u'Tiempo [s]')
 ax.set_ylabel(u'Tensión [V]')
 ax.set_xlim([delay+0.0,delay+0.1])
 ax.set_ylim([-1.5,1.5])
-ax.set_title(u'Caida de tensión en diodo y resistencia '+diodo+' utilizando un seno de '+str(frec_ini)+' Hz. Sin corrección de offset.')
+#ax.set_title(u'Caida de tensión en diodo y resistencia '+diodo+' utilizando un seno de '+str(frec_ini)+' Hz. Sin corrección de offset.')
 figname = os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpeta_salida, 'caida_diodo_res_'+diodo+'_'+str(resistencia)+'_'+str(temp)+'C_'+str(frec_ini)+'hz_sin_corregir_offset_ajuste.png')
 fig.savefig(figname, dpi=300)  
 plt.close(fig)
@@ -399,7 +411,8 @@ if not os.path.exists(os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpet
 
 # Genero matriz de señales: ejemplo de barrido en frecuencias en el canal 0
 dato = 'int16'    
-ind_nivel = 9
+par_level = 100
+ind_nivel = par2ind(par_level,parlante_levels)
 mic_level = 70
 fs = 44100*8  
 duracion = 1
@@ -575,7 +588,8 @@ if not os.path.exists(os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpet
 
 # Genero matriz de señales: ejemplo de barrido en frecuencias en el canal 0
 dato = 'int16'    
-ind_nivel = 9
+par_level = 100
+ind_nivel = par2ind(par_level,parlante_levels)
 mic_level = 70
 fs = 44100*8  
 duracion = 5
@@ -868,7 +882,7 @@ ax.set_xlabel(u'Tensión diodo [V]')
 ax.set_ylabel(u'Corriente diodo [mA]')
 ax.set_xlim([-0,1])
 ax.set_ylim([-1,11])
-ax.set_title('Curva del diodo con flaco creciente para '+diodo+' a distintas temperaturas')
+#ax.set_title('Curva del diodo con flaco creciente para '+diodo+' a distintas temperaturas')
 figname = os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpeta_salida,subsubsubcarpeta_salida, 'curva_diodo_creciente_temperatura.png')
 fig.savefig(figname, dpi=300)  
 
@@ -896,7 +910,7 @@ ax.set_xlabel(u'Tensión diodo [V]')
 ax.set_ylabel(u'Corriente diodo [mA]')
 ax.set_xlim([-0,1])
 ax.set_ylim([-1,11])
-ax.set_title('Curva del diodo con flaco decreciente para '+diodo+' a distintas temperaturas')
+#ax.set_title('Curva del diodo con flaco decreciente para '+diodo+' a distintas temperaturas')
 figname = os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpeta_salida,subsubsubcarpeta_salida, 'curva_diodo_decreciente_temperatura.png')
 fig.savefig(figname, dpi=300)  
 
@@ -930,7 +944,7 @@ ax.set_xlabel(u'Tensión diodo [V]')
 ax.set_ylabel(u'Corriente diodo [mA]')
 ax.set_xlim([-0,1])
 ax.set_ylim([-1,11])
-ax.set_title('Curva del diodo con flaco creciente para '+diodo+' a ' + '{:6.2f}'.format(array_actual_med[i])+' °C')
+#ax.set_title('Curva del diodo con flaco creciente para '+diodo+' a ' + '{:6.2f}'.format(array_actual_med[i])+' °C')
 figname = os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpeta_salida,subsubsubcarpeta_salida, 'ejemplo_curva_diodo_creciente_temperatura.png')
 fig.savefig(figname, dpi=300)  
 plt.close(fig)
@@ -958,7 +972,7 @@ ax.set_xlabel(u'Tensión diodo [V]')
 ax.set_ylabel(u'Corriente diodo [mA]')
 ax.set_xlim([-0,1])
 ax.set_ylim([-1,11])
-ax.set_title('Curva del diodo con flaco decreciente para '+diodo+' a ' + '{:6.2f}'.format(array_actual_med[i])+' °C')
+#ax.set_title('Curva del diodo con flaco decreciente para '+diodo+' a ' + '{:6.2f}'.format(array_actual_med[i])+' °C')
 figname = os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpeta_salida,subsubsubcarpeta_salida, 'ejemplo_curva_diodo_decreciente_temperatura.png')
 fig.savefig(figname, dpi=300)  
 plt.close(fig)
@@ -998,7 +1012,7 @@ ax.grid(linestyle='--')
 ax.legend()
 ax.set_xlabel('Temperatura [K]')
 ax.set_ylabel('V_t*Q/K [K]')
-ax.set_title('Factor idealidad con flanco creciente')
+#ax.set_title('Factor idealidad con flanco creciente')
 figname = os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpeta_salida,subsubsubcarpeta_salida, 'factor_linealidad_creciente.png')
 fig.savefig(figname, dpi=300)  
 plt.close(fig)
@@ -1017,7 +1031,7 @@ ax.grid(linestyle='--')
 ax.legend()
 ax.set_xlabel('Temperatura [K]')
 ax.set_ylabel('V_t*Q/K [K]')
-ax.set_title('Factor idealidad con flanco decreciente')
+#ax.set_title('Factor idealidad con flanco decreciente')
 figname = os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpeta_salida,subsubsubcarpeta_salida, 'factor_linealidad_decreciente.png')
 fig.savefig(figname, dpi=300)  
 plt.close(fig)

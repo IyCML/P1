@@ -35,17 +35,37 @@ params = {'legend.fontsize': 14,
 pylab.rcParams.update(params)
 
 
+#%%
+carpeta_salida = 'Calibracion'
+subcarpeta_salida = 'Parlante'
+# Calibracion parlante
+amplitud_v_ch0 = np.load(os.path.join(carpeta_salida,subcarpeta_salida, 'wp_amp_ch0.npy'))
+amplitud_v_ch1 = np.load(os.path.join(carpeta_salida,subcarpeta_salida, 'wp_amp_ch1.npy'))
+parlante_levels = np.load(os.path.join(carpeta_salida,subcarpeta_salida, 'parlante_levels.npy'))
+amplitud_v_chs = np.array([amplitud_v_ch0,amplitud_v_ch1])
+
+mic_levels = [10,20,30,40,50,60,70,80,90,100]
+
 
 #%%
 
 # Respuesta emisor-receptor METODO CHIRP
 
+carpeta_salida = 'Respuesta'
+subcarpeta_salida = 'Chirp'
+if not os.path.exists(carpeta_salida):
+    os.mkdir(carpeta_salida)
+    
+if not os.path.exists(os.path.join(carpeta_salida,subcarpeta_salida)):
+    os.mkdir(os.path.join(carpeta_salida,subcarpeta_salida))    
+
+dato = 'int16'
 fs = 44100*8  
 duracion = 30
 muestras = int(fs*duracion)
 input_channels = 2
 output_channels = 2
-amplitud = 0.1
+amplitud = 0.6
 
 # Frecuencias bajas
 frec_ini = 0
@@ -61,15 +81,27 @@ data_out1[0,:,0] = output_signal
 
 offset_correlacion = int(fs*(5))
 steps_correlacion = int(fs*(0.1))
-data_in1, retardos1 = play_rec(fs,input_channels,data_out1,'si',offset_correlacion,steps_correlacion)
+data_in1, retardos1 = play_rec(fs,input_channels,data_out1,'si',offset_correlacion,steps_correlacion,dato=dato)
 
+np.save(os.path.join(carpeta_salida,subcarpeta_salida, 'data_out'),data_out1)
+np.save(os.path.join(carpeta_salida,subcarpeta_salida, 'data_in'),data_in1)
 
 
 #plt.plot(data_out1[0,:,0])
 #plt.plot(data_in1[0,:,0]/(2**32))
 
-
+#%% Graficos
 ### Realiza la FFT de la señal enviada y adquirida
+
+carpeta_salida = 'Respuesta'
+subcarpeta_salida = 'Chirp'
+
+dato = 'int16'
+fs = 44100*8  
+
+data_out1 = np.load(os.path.join(carpeta_salida,subcarpeta_salida, 'data_out.npy'))
+data_in1 = np.load(os.path.join(carpeta_salida,subcarpeta_salida, 'data_in.npy'))
+
 paso = 0
 ch_send = 0
 ch_acq = 0
@@ -91,13 +123,6 @@ frec_ind_send = np.argmin(np.abs(frec_send1-frec_comp))
 # Interpolo para poder normalizar
 #fft_acq1_interp = np.interp(frec_send1, frec_acq1, fft_acq1)
 
-carpeta_salida = 'Respuesta'
-subcarpeta_salida = 'Chirp'
-if not os.path.exists(carpeta_salida):
-    os.mkdir(carpeta_salida)
-    
-if not os.path.exists(os.path.join(carpeta_salida,subcarpeta_salida)):
-    os.mkdir(os.path.join(carpeta_salida,subcarpeta_salida))    
 
 
 fft_norm1 = fft_acq1/fft_acq1[frec_ind_send]/(fft_send1/fft_send1[frec_ind_send])
@@ -107,16 +132,15 @@ np.save(os.path.join(carpeta_salida,subcarpeta_salida, 'frecuencia_chirp'),frec_
 
 fig = plt.figure(figsize=(14, 7), dpi=250)
 ax = fig.add_axes([.15, .15, .75, .8])     
-ax.semilogy(frec_send1,fft_acq1/fft_acq1[frec_ind_send],'-', label=u'Señal adquirida',alpha=0.7,linewidth=2)
-ax.semilogy(frec_send1,fft_send1/fft_send1[frec_ind_send],'-', label=u'Señal enviada',alpha=0.7,linewidth=2)
-ax.semilogy(frec_send1,fft_norm1,'-', label=u'Señal normalizada',alpha=0.7,linewidth=2)
+ax.plot(frec_send1,10*np.log10(fft_acq1/fft_acq1[frec_ind_send]),'-', label=u'Señal adquirida',alpha=0.7,linewidth=2)
+ax.plot(frec_send1,10*np.log10(fft_send1/fft_send1[frec_ind_send]),'-', label=u'Señal enviada',alpha=0.7,linewidth=2)
+ax.plot(frec_send1,10*np.log10(fft_norm1),'-', label=u'Señal normalizada',alpha=0.7,linewidth=2)
 
 ax.set_xlim([-1000,28000])
-ax.set_ylim([1e-3,1e1])
-ax.set_title(u'FFT de la señal enviada y adquirida')
+ax.set_ylim([-30,10])
 ax.set_xlabel('Frecuencia [Hz]')
-ax.set_ylabel('Potencia [db]')
-ax.set_title('Potencia del conjunto emisor-receptor de la placa de audio de PC')
+ax.set_ylabel('Potencia [dB]')
+#ax.set_title('Potencia del conjunto emisor-receptor de la placa de audio de PC')
 ax.legend(loc=1)
 ax.grid(linewidth=0.5,linestyle='--')
 
@@ -138,29 +162,28 @@ plt.close(fig)
 
 fig = plt.figure(dpi=250)
 ax = fig.add_axes([.10, .12, .37, .8])
-ax.semilogy(frec_send1,fft_acq1/fft_acq1[frec_ind_send],'-', label=u'Señal adquirida',alpha=0.7,linewidth=2)
-ax.semilogy(frec_send1,fft_send1/fft_send1[frec_ind_send],'-', label=u'Señal enviada',alpha=0.7,linewidth=2)
-ax.semilogy(frec_send1,fft_norm1,'-', label=u'Señal normalizada',alpha=0.7,linewidth=2)
+ax.plot(frec_send1,10*np.log10(fft_acq1/fft_acq1[frec_ind_send]),'-', label=u'Señal adquirida',alpha=0.7,linewidth=2)
+ax.plot(frec_send1,10*np.log10(fft_send1/fft_send1[frec_ind_send]),'-', label=u'Señal enviada',alpha=0.7,linewidth=2)
+ax.plot(frec_send1,10*np.log10(fft_norm1),'-', label=u'Señal normalizada',alpha=0.7,linewidth=2)
 
 ax.set_xlim([-1000,28000])
-ax.set_ylim([1e-3,1e1])
-ax.set_title(u'FFT de la señal enviada y adquirida')
+ax.set_ylim([-30,10])
 ax.set_xlabel('Frecuencia [Hz]')
-ax.set_ylabel('Potencia [db]')
-ax.set_title('Potencia del conjunto emisor-receptor')
+ax.set_ylabel('Potencia [dB]')
+#ax.set_title('Potencia del conjunto emisor-receptor')
 ax.legend(loc=1)
 ax.grid(linewidth=0.5,linestyle='--')
 
 ax1 = fig.add_axes([.58, .12, .37, .8])
-ax1.semilogy(frec_send1,fft_acq1/fft_acq1[frec_ind_send],'-', label=u'Señal adquirida',alpha=0.7,linewidth=2)
-ax1.semilogy(frec_send1,fft_send1/fft_send1[frec_ind_send],'-', label=u'Señal enviada',alpha=0.7,linewidth=2)
-ax1.semilogy(frec_send1,fft_norm1,'-', label=u'Señal normalizada',alpha=0.7,linewidth=2)
+ax1.plot(frec_send1,10*np.log10(fft_acq1/fft_acq1[frec_ind_send]),'-', label=u'Señal adquirida',alpha=0.7,linewidth=2)
+ax1.plot(frec_send1,10*np.log10(fft_send1/fft_send1[frec_ind_send]),'-', label=u'Señal enviada',alpha=0.7,linewidth=2)
+ax1.plot(frec_send1,10*np.log10(fft_norm1),'-', label=u'Señal normalizada',alpha=0.7,linewidth=2)
 
 ax1.set_xlim([-100,500])
-ax1.set_ylim([1e-3,1e1])
+ax1.set_ylim([-30,10])
 ax1.set_xlabel('Frecuencia [Hz]')
-ax1.set_ylabel('Potencia [db]')
-ax1.set_title('Detalle baja frecuencia')
+ax1.set_ylabel('Potencia [dB]')
+#ax1.set_title('Detalle baja frecuencia')
 ax1.legend(loc=1)
 ax1.grid(linewidth=0.5,linestyle='--')
 
@@ -178,15 +201,14 @@ plt.close(fig)
 
 fig = plt.figure(figsize=(14, 7), dpi=250)
 ax = fig.add_axes([.15, .15, .75, .8])     
-ax.semilogy(frec_send1,fft_norm1,'-',color='blue', label=u'Señal normalizada',alpha=0.7,linewidth=2)
-ax.axvline(14.6,linestyle='--',color='red',alpha=0.7, label='Ancho de banda')
+ax.plot(frec_send1,10*np.log10(fft_norm1),'-',color='blue', label=u'Señal normalizada',alpha=0.7,linewidth=2)
+ax.axvline(7,linestyle='--',color='red',alpha=0.7, label='Ancho de banda')
 ax.axvline(20187,linestyle='--',color='red',alpha=0.7)
 ax.set_xlim([-1000,28000])
-ax.set_ylim([1e-3,1e1])
-ax.set_title(u'FFT de la señal enviada y adquirida')
+ax.set_ylim([-30,10])
 ax.set_xlabel('Frecuencia [Hz]')
-ax.set_ylabel('Potencia [db]')
-ax.set_title('Potencia del conjunto emisor-receptor de la placa de audio de PC. Normalizada con señal enviada. BW: 14.6 Hz - 20187 Hz')
+ax.set_ylabel('Potencia [dB]')
+#ax.set_title('Potencia del conjunto emisor-receptor de la placa de audio de PC. Normalizada con señal enviada. BW: 14.6 Hz - 20187 Hz')
 ax.legend(loc=1)
 ax.grid(linewidth=0.5,linestyle='--')
 plt.show()
@@ -220,7 +242,7 @@ ax1.set_ylabel('Intensidad [a.u.]',color='blue')
 ax.grid(linestyle='--')
 ax.legend(loc=1)
 ax1.legend(loc=4)
-ax.set_title('Detalle en baja frecuencia de chirp')
+#ax.set_title('Detalle en baja frecuencia de chirp')
 figname = os.path.join(carpeta_salida,subcarpeta_salida, 'chirp_baja_tiempo.png')
 fig.savefig(figname, dpi=300)  
 plt.close(fig)
@@ -229,11 +251,20 @@ plt.close(fig)
 
 #%%
 
+carpeta_salida = 'Respuesta'
+subcarpeta_salida = 'RuidoBlanco'
+if not os.path.exists(carpeta_salida):
+    os.mkdir(carpeta_salida)
+    
+if not os.path.exists(os.path.join(carpeta_salida,subcarpeta_salida)):
+    os.mkdir(os.path.join(carpeta_salida,subcarpeta_salida))  
+
 # Respuesta emisor-receptor METODO RUIDO BLANCO
 
 def gaussian(x, mu, sig):
     return np.exp(-np.power(x - mu, 2.) / (2 * np.power(sig, 2.)))
 
+dato = 'int16'
 fs = 44100*8  
 duracion = 30
 muestras = int(fs*duracion)
@@ -275,13 +306,28 @@ data_out2[0,0:output_signal.shape[0],0] = output_signal
 
 #plt.plot(data_out2[0,:,1])
 
-data_in2, retardos2 = play_rec(fs,input_channels,data_out2,'si')
+data_in2, retardos2 = play_rec(fs,input_channels,data_out2,'si',dato=dato)
+
+np.save(os.path.join(carpeta_salida,subcarpeta_salida, 'data_out'),data_out2)
+np.save(os.path.join(carpeta_salida,subcarpeta_salida, 'data_in'),data_in2)
 
 
 
-plt.plot(data_out2[0,:,1])
-plt.plot(data_in2[0,:,1]/(2**32))
 
+#plt.plot(data_out2[0,:,1])
+#plt.plot(data_in2[0,:,1]/(2**32))
+
+#%%
+
+
+carpeta_salida = 'Respuesta'
+subcarpeta_salida = 'RuidoBlanco'
+
+data_out2 = np.load(os.path.join(carpeta_salida,subcarpeta_salida, 'data_out.npy'))
+data_in2 = np.load(os.path.join(carpeta_salida,subcarpeta_salida, 'data_in.npy'))
+
+dato = 'int16'
+fs = 44100*8  
 
 ### Realiza la FFT de la señal enviada y adquirida
 paso = 0
@@ -304,25 +350,17 @@ frec_ind_send = np.argmin(np.abs(frec_send2-frec_comp))
 
 # Interpolo para poder normalizar
 #fft_acq1_interp = np.interp(frec_send1, frec_acq1, fft_acq1)
-
-carpeta_salida = 'Respuesta'
-subcarpeta_salida = 'RuidoBlanco'
-if not os.path.exists(carpeta_salida):
-    os.mkdir(carpeta_salida)
-    
-if not os.path.exists(os.path.join(carpeta_salida,subcarpeta_salida)):
-    os.mkdir(os.path.join(carpeta_salida,subcarpeta_salida))    
+  
 
 fig = plt.figure(figsize=(14, 7), dpi=250)
 ax = fig.add_axes([.15, .15, .75, .8])     
-ax.semilogy(frec_send2[::50],fft_acq2[::50]/fft_acq2[frec_ind_send],'-',color='blue', label=u'Señal adquirida',alpha=0.7,linewidth=1)
-ax.semilogy(frec_send2[::50],fft_send2[::50]/fft_send2[frec_ind_send],'-',color='red', label=u'Señal enviada',alpha=0.7,linewidth=1)
+ax.plot(frec_send2[::50],10*np.log10(fft_acq2[::50]/fft_acq2[frec_ind_send]),'-',color='blue', label=u'Señal adquirida',alpha=0.7,linewidth=1)
+ax.plot(frec_send2[::50],10*np.log10(fft_send2[::50]/fft_send2[frec_ind_send]),'-',color='red', label=u'Señal enviada',alpha=0.7,linewidth=1)
 ax.set_xlim([-1000,28000])
-ax.set_ylim([1e-3,1e2])
-ax.set_title(u'FFT de la señal enviada y adquirida')
+ax.set_ylim([-30,20])
 ax.set_xlabel('Frecuencia [Hz]')
-ax.set_ylabel('Potencia [db]')
-ax.set_title('Potencia del conjunto emisor-receptor de la placa de audio de PC')
+ax.set_ylabel('Potencia [dB]')
+#ax.set_title('Potencia del conjunto emisor-receptor de la placa de audio de PC')
 ax.legend(loc=1)
 ax.grid(linewidth=0.5,linestyle='--')
 
@@ -346,15 +384,14 @@ fft_norm2 = fft_acq2/fft_acq2[frec_ind_send]/(fft_send2/fft_send2[frec_ind_send]
 
 fig = plt.figure(figsize=(14, 7), dpi=250)
 ax = fig.add_axes([.15, .15, .75, .8])     
-ax.semilogy(frec_send2,fft_norm2,'-',color='blue', label=u'Señal normalizada',alpha=0.7,linewidth=2)
-ax.axvline(14.6,linestyle='--',color='red',alpha=0.7, label='Ancho de banda')
+ax.plot(frec_send2,10*np.log10(fft_norm2),'-',color='blue', label=u'Señal normalizada',alpha=0.7,linewidth=2)
+ax.axvline(7,linestyle='--',color='red',alpha=0.7, label='Ancho de banda')
 ax.axvline(20187,linestyle='--',color='red',alpha=0.7)
 ax.set_xlim([-1000,28000])
-ax.set_ylim([1e-3,1e1])
-ax.set_title(u'FFT de la señal enviada y adquirida')
+ax.set_ylim([-30,10])
 ax.set_xlabel('Frecuencia [Hz]')
-ax.set_ylabel('Potencia [db]')
-ax.set_title('Potencia del conjunto emisor-receptor de la placa de audio de PC. Normalizada con señal enviada. BW: 14.6 Hz - 20187 Hz')
+ax.set_ylabel('Potencia [dB]')
+#ax.set_title('Potencia del conjunto emisor-receptor de la placa de audio de PC. Normalizada con señal enviada. BW: 14.6 Hz - 20187 Hz')
 ax.legend(loc=1)
 ax.grid(linewidth=0.5,linestyle='--')
 plt.show()
@@ -378,6 +415,14 @@ plt.close(fig)
 
 #%%
 ## RESPUESTA EMISOR-RECEPTOR METODO BARRIDO DE FRECUENCIAS
+
+carpeta_salida = 'Respuesta'
+subcarpeta_salida = 'Barrido'
+if not os.path.exists(carpeta_salida):
+    os.mkdir(carpeta_salida)
+    
+if not os.path.exists(os.path.join(carpeta_salida,subcarpeta_salida)):
+    os.mkdir(os.path.join(carpeta_salida,subcarpeta_salida)) 
 
 fs = 44100*8  
 duracion = 5
@@ -418,10 +463,35 @@ offset_correlacion = 0#int(fs*(1))
 steps_correlacion = 0#int(fs*(1))
 data_in, retardos = play_rec(fs,input_channels,data_out,'si',offset_correlacion,steps_correlacion)
 
+np.save(os.path.join(carpeta_salida,subcarpeta_salida, 'data_out'),data_out)
+np.save(os.path.join(carpeta_salida,subcarpeta_salida, 'data_in'),data_in)
 
 
 #%%
 # Graficos
+
+carpeta_salida = 'Respuesta'
+subcarpeta_salida = 'Barrido'
+
+frecs_ini = [0,100,1000,18000,20000]
+frecs_fin = [100,1000,18000,20000,23000]
+pasos_rangos = [20,20,30,20,20]
+
+frecs_finales = np.array([])
+for i in range(len(pasos_rangos)):
+    
+    frec_ini = frecs_ini[i]
+    frec_fin = frecs_fin[i]
+    pasos = pasos_rangos[i]   
+    delta_frec = (frec_fin-frec_ini)/(pasos+1)
+    
+    for j in range(pasos):
+        
+        fr = frec_ini + j*delta_frec        
+        frecs_finales = np.append(frecs_finales,fr)
+
+data_out = np.load(os.path.join(carpeta_salida,subcarpeta_salida, 'data_out.npy'))
+data_in = np.load(os.path.join(carpeta_salida,subcarpeta_salida, 'data_in.npy'))
 
 delay = int(fs*0.5)
 muestras_analisis = int(fs*3)
@@ -463,24 +533,14 @@ pot_salida_min = amp_salida_min**2/amp_salida_min[ind_frec]**2
 
 
 
-
-carpeta_salida = 'Respuesta'
-subcarpeta_salida = 'Barrido'
-if not os.path.exists(carpeta_salida):
-    os.mkdir(carpeta_salida)
-    
-if not os.path.exists(os.path.join(carpeta_salida,subcarpeta_salida)):
-    os.mkdir(os.path.join(carpeta_salida,subcarpeta_salida))    
-
 fig = plt.figure(figsize=(14, 7), dpi=250)
 ax = fig.add_axes([.15, .15, .75, .8])     
-ax.semilogy(frecs_finales,pot_salida_max,'-',color='blue', label=u'Señal adquirida',alpha=0.7,linewidth=2)
+ax.plot(frecs_finales,10*np.log10(pot_salida_max),'-',color='blue', label=u'Señal adquirida',alpha=0.7,linewidth=2)
 ax.set_xlim([-1000,28000])
-ax.set_ylim([1e-3,1e1])
-ax.set_title(u'Potencia de la señal enviada y adquirida')
+ax.set_ylim([-30,10])
 ax.set_xlabel('Frecuencia [Hz]')
-ax.set_ylabel('Potencia [db]')
-ax.set_title('Potencia del conjunto emisor-receptor de la placa de audio de PC. Método barrido.')
+ax.set_ylabel('Potencia [dB]')
+#ax.set_title('Potencia del conjunto emisor-receptor de la placa de audio de PC. Método barrido.')
 ax.legend(loc=1)
 ax.grid(linewidth=0.5,linestyle='--')
 plt.show()
@@ -506,26 +566,38 @@ plt.close(fig)
 
 carpeta_salida = 'Respuesta'
 subcarpeta_salida = 'ComparacionChirp'
-if not os.path.exists(carpeta_salida):
-    os.mkdir(carpeta_salida)
-    
-if not os.path.exists(os.path.join(carpeta_salida,subcarpeta_salida)):
-    os.mkdir(os.path.join(carpeta_salida,subcarpeta_salida)) 
+
+# Busco ancho de banda
+comp_frec = 1000
+rango_1_frec = [2,200]
+rango_2_frec = [15000,22000]
+
+comp_ind = np.argmin(np.abs(frec_send1-comp_frec))
+rango_1_ind = [np.argmin(np.abs(frec_send1-rango_1_frec[0])),np.argmin(np.abs(frec_send1-rango_1_frec[1]))]
+rango_2_ind = [np.argmin(np.abs(frec_send1-rango_2_frec[0])),np.argmin(np.abs(frec_send1-rango_2_frec[1]))]
+
+bw_min_ind = rango_1_ind[0] + np.argmin(np.abs(fft_norm1[rango_1_ind[0]:rango_1_ind[1]] - fft_norm1[comp_ind]/2))
+bw_max_ind = rango_2_ind[0] + np.argmin(np.abs(fft_norm1[rango_2_ind[0]:rango_2_ind[1]] - fft_norm1[comp_ind]/2))
+
+bw_min = frec_send1[bw_min_ind]
+bw_max = frec_send1[bw_max_ind]
+print(bw_min)
+print(bw_max)
 
 
+###
 fig = plt.figure(dpi=250)
 ax = fig.add_axes([.15, .15, .75, .8])     
-ax.semilogy(frec_send1,fft_norm1,'-',color='blue', label=u'Potencia por chirp',alpha=0.7,linewidth=2) # por chirp
-ax.semilogy(frecs_finales,pot_salida_max,'o',color='red', label=u'Potencia por barrido',alpha=0.7,linewidth=2) # barrido
+ax.plot(frec_send1,10*np.log10(fft_norm1),'-',color='blue', label=u'Potencia por chirp',alpha=0.7,linewidth=2) # por chirp
+ax.plot(frecs_finales,10*np.log10(pot_salida_max),'o',color='red', label=u'Potencia por barrido',alpha=0.7,linewidth=2) # barrido
 
-ax.axvline(14.6,linestyle='--',color='red',alpha=0.7, label='Ancho de banda')
-ax.axvline(20187,linestyle='--',color='red',alpha=0.7)
+ax.axvline(bw_min,linestyle='--',color='red',alpha=0.7, label='Ancho de banda')
+ax.axvline(bw_max,linestyle='--',color='red',alpha=0.7)
 ax.set_xlim([-1000,28000])
-ax.set_ylim([1e-3,1e1])
-ax.set_title(u'FFT de la señal enviada y adquirida')
+ax.set_ylim([-30,10])
 ax.set_xlabel('Frecuencia [Hz]')
-ax.set_ylabel('Potencia [db]')
-ax.set_title('Potencia del conjunto emisor-receptor. Comparación método chirp y barrido. BW: 14.6 Hz - 20187 Hz')
+ax.set_ylabel('Potencia [dB]')
+#ax.set_title('Potencia del conjunto emisor-receptor. Comparación método chirp y barrido. BW: 14.6 Hz - 20187 Hz')
 ax.legend(loc=1)
 ax.grid(linewidth=0.5,linestyle='--')
 plt.show()
@@ -549,30 +621,29 @@ plt.close(fig)
 
 fig = plt.figure(dpi=250)
 ax = fig.add_axes([.10, .12, .37, .8])
-ax.semilogy(frec_send1,fft_norm1,'-',color='blue', label=u'Potencia por chirp',alpha=0.7,linewidth=2) # por chirp
-ax.semilogy(frecs_finales,pot_salida_max,'o',color='red', label=u'Potencia por barrido',alpha=0.7,linewidth=2) # barrido
+ax.plot(frec_send1,10*np.log10(fft_norm1),'-',color='blue', label=u'Potencia por chirp',alpha=0.7,linewidth=2) # por chirp
+ax.plot(frecs_finales,10*np.log10(pot_salida_max),'o',color='red', label=u'Potencia por barrido',alpha=0.7,linewidth=2) # barrido
 
-ax.axvline(14.6,linestyle='--',color='red',alpha=0.7, label='Ancho de banda')
-ax.axvline(20187,linestyle='--',color='red',alpha=0.7)
+ax.axvline(bw_min,linestyle='--',color='red',alpha=0.7, label='Ancho de banda')
+ax.axvline(bw_max,linestyle='--',color='red',alpha=0.7)
 ax.set_xlim([-1000,28000])
-ax.set_ylim([1e-3,1e1])
-ax.set_title(u'FFT de la señal enviada y adquirida')
+ax.set_ylim([-30,10])
 ax.set_xlabel('Frecuencia [Hz]')
-ax.set_ylabel('Potencia [db]')
-ax.set_title('Comparación método chirp y barrido')
+ax.set_ylabel('Potencia [dB]')
+#ax.set_title('Comparación método chirp y barrido')
 ax.legend(loc=1)
 ax.grid(linewidth=0.5,linestyle='--')
 
 ax1 = fig.add_axes([.58, .12, .37, .8])
-ax1.semilogy(frec_send1,fft_norm1,'-',color='blue', label=u'Potencia por chirp',alpha=0.7,linewidth=2) # por chirp
-ax1.semilogy(frecs_finales,pot_salida_max,'o',color='red', label=u'Potencia por barrido',alpha=0.7,linewidth=2) # barrido
-ax.axvline(14.6,linestyle='--',color='red',alpha=0.7, label='Ancho de banda')
-ax.axvline(20187,linestyle='--',color='red',alpha=0.7)
+ax1.plot(frec_send1,10*np.log10(fft_norm1),'-',color='blue', label=u'Potencia por chirp',alpha=0.7,linewidth=2) # por chirp
+ax1.plot(frecs_finales,10*np.log10(pot_salida_max),'o',color='red', label=u'Potencia por barrido',alpha=0.7,linewidth=2) # barrido
+ax1.axvline(bw_min,linestyle='--',color='red',alpha=0.7, label='Ancho de banda')
+ax1.axvline(bw_max,linestyle='--',color='red',alpha=0.7)
 ax1.set_xlim([-20,100])
-ax1.set_ylim([1e-3,1e1])
+ax1.set_ylim([-30,10])
 ax1.set_xlabel('Frecuencia [Hz]')
-ax1.set_ylabel('Potencia [db]')
-ax1.set_title('Detalle baja frecuencia')
+ax1.set_ylabel('Potencia [dB]')
+#ax1.set_title('Detalle baja frecuencia')
 ax1.legend(loc=1)
 ax1.grid(linewidth=0.5,linestyle='--')
 
@@ -585,26 +656,20 @@ plt.close(fig)
 
 carpeta_salida = 'Respuesta'
 subcarpeta_salida = 'ComparacionRuidoBlanco'
-if not os.path.exists(carpeta_salida):
-    os.mkdir(carpeta_salida)
-    
-if not os.path.exists(os.path.join(carpeta_salida,subcarpeta_salida)):
-    os.mkdir(os.path.join(carpeta_salida,subcarpeta_salida)) 
 
 
 fig = plt.figure(figsize=(14, 7), dpi=250)
 ax = fig.add_axes([.15, .15, .75, .8])     
-ax.semilogy(frec_send2,fft_norm2,'-',color='blue', label=u'Potencia por ruido blanco',alpha=0.7,linewidth=2) # por chirp
-ax.semilogy(frecs_finales,pot_salida_max,'o',color='red', label=u'Potencia por barrido',alpha=0.7,linewidth=2) # barrido
+ax.plot(frec_send2,10*np.log10(fft_norm2),'-',color='blue', label=u'Potencia por ruido blanco',alpha=0.7,linewidth=2) # por chirp
+ax.plot(frecs_finales,10*np.log10(pot_salida_max),'o',color='red', label=u'Potencia por barrido',alpha=0.7,linewidth=2) # barrido
 
-ax.axvline(14.6,linestyle='--',color='red',alpha=0.7, label='Ancho de banda')
-ax.axvline(20187,linestyle='--',color='red',alpha=0.7)
+ax.axvline(bw_min,linestyle='--',color='red',alpha=0.7, label='Ancho de banda')
+ax.axvline(bw_max,linestyle='--',color='red',alpha=0.7)
 ax.set_xlim([-1000,28000])
-ax.set_ylim([1e-3,1e1])
-ax.set_title(u'FFT de la señal enviada y adquirida')
+ax.set_ylim([-30,10])
 ax.set_xlabel('Frecuencia [Hz]')
-ax.set_ylabel('Potencia [db]')
-ax.set_title('Potencia del conjunto emisor-receptor de la placa de audio de PC. Comparación método rudio blanco y barrido. BW: 14.6 Hz - 20187 Hz')
+ax.set_ylabel('Potencia [dB]')
+#ax.set_title('Potencia del conjunto emisor-receptor de la placa de audio de PC. Comparación método rudio blanco y barrido. BW: 14.6 Hz - 20187 Hz')
 ax.legend(loc=1)
 ax.grid(linewidth=0.5,linestyle='--')
 plt.show()

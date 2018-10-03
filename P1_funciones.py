@@ -466,6 +466,7 @@ def sincroniza_con_trigger(trigger,data_in,offset_correlacion=0,steps_correlacio
 def sincroniza_con_trigger1(trigger,data_in,offset_correlacion=0,steps_correlacion=0, ch=0):
     
     """
+    Esta funcion es solo para poder graficar la correlacion es la misma que la de arriba.
     Esta función corrige el retardo de las mediciones adquiridas con la función play_rec. Para ello utiliza la señal de 
     trigger enviada y adquirida en el canal 0 de la placa de audio, y sincroniza las mediciones de todos los canales de entrada. 
     El retardo se determina a partir de realizar la correlación cruzada entre la señal enviada y adquirida, y encontrando la posición
@@ -549,3 +550,16 @@ def sincroniza_con_trigger1(trigger,data_in,offset_correlacion=0,steps_correlaci
         
         
     return data_in_corrected, retardos, corr
+
+
+def par2ind(par_level,parlante_levels):
+    
+    for i in range(parlante_levels.shape[0]):
+        
+        if parlante_levels[i] == par_level:
+            break
+        
+    return i
+    
+    
+    

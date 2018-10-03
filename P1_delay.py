@@ -38,7 +38,14 @@ params = {'legend.fontsize': 14,
 pylab.rcParams.update(params)
 
 
-
+#%%
+carpeta_salida = 'Calibracion'
+subcarpeta_salida = 'Parlante'
+# Calibracion parlante
+amplitud_v_ch0 = np.load(os.path.join(carpeta_salida,subcarpeta_salida, 'wp_amp_ch0.npy'))
+amplitud_v_ch1 = np.load(os.path.join(carpeta_salida,subcarpeta_salida, 'wp_amp_ch1.npy'))
+parlante_levels = np.load(os.path.join(carpeta_salida,subcarpeta_salida, 'parlante_levels.npy'))
+mic_levels = [10,20,30,40,50,60,70,80,90,100]
 
 
 #%%
@@ -168,7 +175,7 @@ for k in range(8):
     ax.grid(linestyle='--')
     ax.set_xlabel('Corrida N°')
     ax.set_ylabel('Retardo [ms]')
-    ax.set_title('Retardo para distintos tamaños de chunks y frecuencia de sampleo '+ '{:6.2f}'.format(frec_sampleo/1000) + ' kHz')
+    #ax.set_title('Retardo para distintos tamaños de chunks y frecuencia de sampleo '+ '{:6.2f}'.format(frec_sampleo/1000) + ' kHz')
     figname = os.path.join(carpeta_salida,subcarpeta_salida, 'frec_'+str(k)+'.png')
     fig.savefig(figname, dpi=300)  
     plt.close(fig)
@@ -263,7 +270,7 @@ ax.legend(bbox_to_anchor=(1.02, 1.00))
 ax.grid(linestyle='--')
 ax.set_xlabel('Corrida N°')
 ax.set_ylabel('Retardo [ms]')
-ax.set_title('Retardo para distintas frecuencias enviadas y frecuencia de sampleo '+ '{:6.2f}'.format(frec_sampleo/1000) + ' kHz. Tamaño chunk: ' '{:6.2f}'.format(chunk_output_size[0]/1024/1024)+ ' Mbytes')
+#ax.set_title('Retardo para distintas frecuencias enviadas y frecuencia de sampleo '+ '{:6.2f}'.format(frec_sampleo/1000) + ' kHz. Tamaño chunk: ' '{:6.2f}'.format(chunk_output_size[0]/1024/1024)+ ' Mbytes')
 figname = os.path.join(carpeta_salida,subcarpeta_salida, 'frec.png')
 fig.savefig(figname, dpi=300)  
 plt.close(fig)
@@ -296,8 +303,8 @@ if not os.path.exists(os.path.join(carpeta_salida,subcarpeta_salida)):
     os.mkdir(os.path.join(carpeta_salida,subcarpeta_salida))     
 
 # Genero matriz de señales: ejemplo de barrido en frecuencias en el canal 0
-ind_nivel = 6
-mic_level = 70
+ind_nivel = 9
+mic_level = 50
 fs = 44100*8  
 duracion = 0.3
 muestras = int(fs*duracion)
@@ -348,10 +355,10 @@ ax.legend()
 ax1.legend()
 ax.grid(linestyle='--')
 ax1.grid(linestyle='--')
-ax.set_xlabel('Tiempo [seg]')
+ax.set_xlabel('Tiempo [s]')
 ax.set_ylabel('Amplitud [u.a.]')
 ax1.set_ylabel('Amplitud [u.a.]')
-ax1.set_title('Señal sintética enviada')
+#ax1.set_title('Señal sintética enviada')
 figname = os.path.join(carpeta_salida,subcarpeta_salida, 'senal_sintetica.png')
 fig.savefig(figname, dpi=300)  
 plt.close(fig)
@@ -367,10 +374,10 @@ ax.legend()
 ax1.legend()
 ax.grid(linestyle='--')
 ax1.grid(linestyle='--')
-ax.set_xlabel('Tiempo [seg]')
+ax.set_xlabel('Tiempo [s]')
 ax.set_ylabel('Amplitud [u.a.]')
 ax1.set_ylabel('Amplitud [u.a.]')
-ax1.set_title('Señal adquirida sin corregir retardo')
+#ax1.set_title('Señal adquirida sin corregir retardo')
 figname = os.path.join(carpeta_salida,subcarpeta_salida, 'senal_adquirida.png')
 fig.savefig(figname, dpi=300)  
 plt.close(fig)
@@ -384,10 +391,10 @@ ax.legend()
 ax1.legend()
 ax.grid(linestyle='--')
 ax1.grid(linestyle='--')
-ax.set_xlabel('Tiempo [seg]')
+ax.set_xlabel('Tiempo [s]')
 ax.set_ylabel('Amplitud [u.a.]')
 ax1.set_ylabel('Amplitud [u.a.]')
-ax1.set_title('Señal adquirida con retardo corregido')
+#ax1.set_title('Señal adquirida con retardo corregido')
 figname = os.path.join(carpeta_salida,subcarpeta_salida, 'senal_adquirida_corregida.png')
 fig.savefig(figname, dpi=300)  
 plt.close(fig)
@@ -404,9 +411,9 @@ ax.text(t_corr[ind_max]-0.11,np.max(corr)*0.95,'Retardo: ', horizontalalignment=
 ax.text(t_corr[ind_max]-0.11,np.max(corr)*0.87,str(int(1000*retardos[0]/fs)) + ' ms' , horizontalalignment='left')
 ax.legend()
 ax.grid(linestyle='--')
-ax.set_xlabel('Tiempo [seg]')
+ax.set_xlabel('Tiempo [s]')
 ax.set_ylabel('Amplitud [u.a.]')
-ax.set_title('Correlación cruzada entre señal digital de salida y señal adquirida del CH0')
+#ax.set_title('Correlación cruzada entre señal digital de salida y señal adquirida del CH0')
 figname = os.path.join(carpeta_salida,subcarpeta_salida, 'correlacion_cruzada.png')
 fig.savefig(figname, dpi=300)  
 plt.close(fig)

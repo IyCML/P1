@@ -28,6 +28,8 @@ from P1_funciones import play_rec
 from P1_funciones import signalgen
 from P1_funciones import signalgen_corrected
 from P1_funciones import sincroniza_con_trigger
+from P1_funciones import par2ind
+
 
 params = {'legend.fontsize': 14,
           'figure.figsize': (14, 9),
@@ -41,14 +43,17 @@ pylab.rcParams.update(params)
 
 
 #%%
+# CALIBRACION PLACA MARCO PC CASA
 
-windows_nivel = np.array([10,20,30,40,50,60,70,80,90,100])
-tension_rms_v_ch0 = np.array([0.050, 0.142, 0.284, 0.441, 0.678, 0.884, 1.143, 1.484, 1.771, 2.280])
-amplitud_v_ch0 = tension_rms_v_ch0*np.sqrt(2)
-tension_rms_v_ch1 = np.array([0.050, 0.146, 0.291, 0.451, 0.693, 0.904, 1.170, 1.518, 1.812, 2.330])
-amplitud_v_ch1 = tension_rms_v_ch1*np.sqrt(2)
-
+carpeta_salida = 'Calibracion'
+subcarpeta_salida = 'Parlante'
+# Calibracion parlante
+amplitud_v_ch0 = np.load(os.path.join(carpeta_salida,subcarpeta_salida, 'wp_amp_ch0.npy'))
+amplitud_v_ch1 = np.load(os.path.join(carpeta_salida,subcarpeta_salida, 'wp_amp_ch1.npy'))
+parlante_levels = np.load(os.path.join(carpeta_salida,subcarpeta_salida, 'parlante_levels.npy'))
 amplitud_v_chs = np.array([amplitud_v_ch0,amplitud_v_ch1])
+
+mic_levels = [10,20,30,40,50,60,70,80,90,100]  
 
 #%%
 
@@ -75,7 +80,8 @@ if not os.path.exists(os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpet
 
 # Genero matriz de señales: ejemplo de barrido en frecuencias en el canal 0
 dato = 'int16'    
-ind_nivel = 9
+par_level = 100
+ind_nivel = par2ind(par_level,parlante_levels)
 mic_level = 50
 fs = 44100*8  
 duracion = 1
@@ -159,7 +165,7 @@ ax.legend()
 ax.grid(linestyle='--')
 ax.set_xlabel(u'Tiempo [s]')
 ax.set_ylabel(u'Tensión [V]')
-ax.set_title('Offset por ancho de banda corregido')
+#ax.set_title('Offset por ancho de banda corregido')
 ax.set_xlim([0.5,0.505])
 
 ax1 = fig.add_axes([.60, .15, .32, .8])
@@ -171,7 +177,7 @@ ax1.grid(linestyle='--')
 ax1.set_xlabel(u'Tiempo [s]')
 #ax1.set_ylabel(u'Tensión [V]')
 ax1.set_xlim([0.5,0.505])
-ax1.set_title('Offset por recorte corregido')
+#ax1.set_title('Offset por recorte corregido')
 figname = os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpeta_salida, 'salida_diodo_recortada.png')
 fig.savefig(figname, dpi=300)  
 plt.close(fig)
@@ -194,7 +200,8 @@ if not os.path.exists(os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpet
 
 # Genero matriz de señales: ejemplo de barrido en frecuencias en el canal 0
 dato = 'int16'    
-ind_nivel = 9
+par_level = 100
+ind_nivel = par2ind(par_level,parlante_levels)
 mic_level = 50
 fs = 44100*8  
 duracion = 1
@@ -279,7 +286,7 @@ ax.legend()
 ax.grid(linestyle='--')
 ax.set_xlabel(u'Tiempo [s]')
 ax.set_ylabel(u'Tensión [V]')
-ax.set_title('Offset por ancho de banda corregido')
+#ax.set_title('Offset por ancho de banda corregido')
 ax.set_xlim([0.5,0.505])
 
 ax1 = fig.add_axes([.60, .15, .32, .8])
@@ -291,7 +298,7 @@ ax1.set_xlabel(u'Tiempo [s]')
 #ax1.set_ylabel(u'Tensión [V]')
 ax1.set_xlim([0.5027,0.5037])
 ax1.set_ylim([-0.01,0.00])
-ax1.set_title('Detalle ripple caida')
+#ax1.set_title('Detalle ripple caida')
 
 figname = os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpeta_salida, 'salida_diodo.png')
 fig.savefig(figname, dpi=300)  
@@ -316,7 +323,8 @@ if not os.path.exists(os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpet
 
 # Genero matriz de señales: ejemplo de barrido en frecuencias en el canal 0
 dato = 'int16'    
-ind_nivel = 9
+par_level = 100
+ind_nivel = par2ind(par_level,parlante_levels)
 mic_level = 50
 fs = 44100*8  
 duracion = 1
@@ -402,7 +410,7 @@ ax.legend()
 ax.grid(linestyle='--')
 ax.set_xlabel(u'Tiempo [s]')
 ax.set_ylabel(u'Tensión [V]')
-ax.set_title('Offset por ancho de banda corregido')
+#ax.set_title('Offset por ancho de banda corregido')
 ax.set_xlim([0.5,0.505])
 
 ax1 = fig.add_axes([.60, .15, .32, .8])
@@ -414,7 +422,7 @@ ax1.set_xlabel(u'Tiempo [s]')
 #ax1.set_ylabel(u'Tensión [V]')
 ax1.set_xlim([0.5027,0.5037])
 ax1.set_ylim([-0.01,0.00])
-ax1.set_title('Detalle ripple caida')
+#ax1.set_title('Detalle ripple caida')
 
 figname = os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpeta_salida, 'salida_diodo.png')
 fig.savefig(figname, dpi=300)  
@@ -443,7 +451,8 @@ duracion = 30
 muestras = int(fs*duracion)
 input_channels = 2
 output_channels = 1
-ind_nivel = 9
+par_level = 100
+ind_nivel = par2ind(par_level,parlante_levels)
 mic_level = 50
 
 amplitud_v_chs_out = [1.5,1.5] #V
@@ -498,7 +507,7 @@ ax.semilogy(frec_send,fft_send/fft_send[frec_ind_send],'-', label=u'Send',alpha=
 
 ax.set_xlim([-1000,28000])
 ax.set_ylim([1e-3,1e1])
-ax.set_title(u'FFT de la señal digital, input y output para seguidor LM324')
+#ax.set_title(u'FFT de la señal digital, input y output para seguidor LM324')
 ax.set_xlabel('Frecuencia [Hz]')
 ax.set_ylabel('Potencia [db]')
 ax.legend(loc=1)
@@ -511,7 +520,7 @@ ax1.semilogy(frec_send,fft_send/fft_send[frec_ind_send],'-', label=u'Send',alpha
 
 ax1.set_xlim([-10,200])
 ax1.set_ylim([1e-3,1e1])
-ax1.set_title(u'Detalle a baja frecuencia')
+#ax1.set_title(u'Detalle a baja frecuencia')
 ax1.set_xlabel('Frecuencia [Hz]')
 ax1.set_ylabel('Potencia [db]')
 ax1.legend(loc=1)
@@ -536,7 +545,7 @@ ax.semilogy(frec_send,fft_norm_output/fft_norm_output[frec_ind_send],'-', label=
 
 ax.set_xlim([-1000,28000])
 ax.set_ylim([1e-3,1e1])
-ax.set_title(u'FFT normalizada de la señal input y output para seguidor LM324')
+#ax.set_title(u'FFT normalizada de la señal input y output para seguidor LM324')
 ax.set_xlabel('Frecuencia [Hz]')
 ax.set_ylabel('Potencia [db]')
 ax.legend(loc=1)
@@ -548,7 +557,7 @@ ax1.semilogy(frec_send,fft_norm_output/fft_norm_output[frec_ind_send],'-', label
 
 ax1.set_xlim([-10,200])
 ax1.set_ylim([1e-3,1e1])
-ax1.set_title(u'Detalle a baja frecuencia')
+#ax1.set_title(u'Detalle a baja frecuencia')
 ax1.set_xlabel('Frecuencia [Hz]')
 ax1.set_ylabel('Potencia [db]')
 ax1.legend(loc=1)
@@ -578,7 +587,8 @@ R1 = 4600
 
 # Genero matriz de señales: ejemplo de barrido en frecuencias en el canal 0
 dato = 'int16'    
-ind_nivel = 9
+par_level = 100
+ind_nivel = par2ind(par_level,parlante_levels)
 mic_level = 50
 fs = 44100*8  
 duracion = 1
@@ -631,6 +641,7 @@ np.save(os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpeta_salida, 'dat
 carpeta_salida = 'LM324'
 subcarpeta_salida = 'Amplificador'
 subsubcarpeta_salida = '-5V'
+frec_ini = 500
 
 R2 = 100000
 R1 = 4600    
@@ -667,7 +678,7 @@ ax.grid(linestyle='--')
 ax.set_xlabel(u'Tiempo [s]')
 ax.set_ylabel(u'Input [mV]',color='blue')
 ax1.set_ylabel(u'Output [V]',color='red')
-ax.set_title('Amplificador con LM324 con seno de ' + str(frec_ini)+ ' Hz y R1='+str(R1/1000)+ ' kOhms y R2=' +str(R2/1000)+ ' kOhms')
+#ax.set_title('Amplificador con LM324 con seno de ' + str(frec_ini)+ ' Hz y R1='+str(R1/1000)+ ' kOhms y R2=' +str(R2/1000)+ ' kOhms')
 ax.set_xlim([0.5,0.505])
 
 
@@ -686,7 +697,7 @@ ax2.legend()
 ax2.grid(linestyle='--')
 ax2.set_xlabel(u'Input [mv]')
 ax2.set_ylabel(u'Output [v]')
-ax2.set_title('Linealidad')
+#ax2.set_title('Linealidad')
 
 figname = os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpeta_salida, 'salida_amplificador.png')
 fig.savefig(figname, dpi=300)  
@@ -720,7 +731,8 @@ duracion = 30
 muestras = int(fs*duracion)
 input_channels = 2
 output_channels = 1
-ind_nivel = 9
+par_level = 100
+ind_nivel = par2ind(par_level,parlante_levels)
 mic_level = 50
 
 amplitud_v_chs_out = [0.027,0.027] #V
@@ -762,20 +774,21 @@ R1s = [271,330,386,464,558,667,775,994,1200,1316,1451,1545,1760,2170,3210,4700,6
 
 dato = 'int16'    
 fs = 44100*8  
-ind_nivel = 9
+par_level = 100
+ind_nivel = par2ind(par_level,parlante_levels)
 mic_level = 50
 
 calibracion_CH0_seno = np.load(os.path.join('Calibracion',dato, 'Seno_CH0' +  '_wm'+str(mic_level)+'_'+dato+'_ajuste.npy'))
 calibracion_CH1_seno = np.load(os.path.join('Calibracion',dato, 'Seno_CH1'+  '_wm'+str(mic_level)+'_'+dato+'_ajuste.npy'))
 
 
-frec_comp = 1000
+frec_comp = 200
 n = 20
 
 frec_comp_bw = [200,21000]
 ancho_de_banda = []
 
-frec_comp_ganancia = [200,2000,3500,5000,10000,15000]
+frec_comp_ganancia = [200,1000,2000,3500,5000,10000,15000]
 ganancia = {}
 frec_ind_send_ganancia = {}
 for j in range(len(frec_comp_ganancia)):
@@ -910,8 +923,8 @@ for i in range(len(R1s)):
     ax.semilogy(frec_send_filt,fft_norm_output_filt/fft_norm_output_filt[frec_ind_send],'-', label=u'Output',alpha=0.6,linewidth=2)
     
     ax.set_xlim([-1000,25000])
-    ax.set_ylim([1e-3,1e1])
-    ax.set_title(u'FFT normalizada de la señal input y output para seguidor LM324 - Filtrada')
+    ax.set_ylim([-30,10])
+    #ax.set_title(u'FFT normalizada de la señal input y output para seguidor LM324 - Filtrada')
     ax.set_xlabel('Frecuencia [Hz]')
     ax.set_ylabel('Potencia [db]')
     ax.legend(loc=1)
@@ -933,7 +946,7 @@ for i in range(len(R1s)):
     fig.savefig(figname, dpi=300)  
     plt.close(fig)
     
-    ax_tot.semilogy(frec_send_filt,fft_norm_output_filt/fft_norm_output_filt[frec_ind_send],'-',color=cmap(float(i)/len(R1s)), label=u'R2/R1: ' + '{:6.2f}'.format(R2/R1) ,alpha=0.6,linewidth=2)
+    ax_tot.plot(frec_send_filt,10*np.log10(fft_norm_output_filt/fft_norm_output_filt[frec_ind_send]),'-',color=cmap(float(i)/len(R1s)), label=u'R2/R1: ' + '{:6.2f}'.format(R2/R1) ,alpha=0.6,linewidth=2)
 
     # Ancho de banda
     frec_ind_send_lim_ini = np.argmin(np.abs(frec_send_filt-frec_comp_bw[0]))   
@@ -953,8 +966,8 @@ for i in range(len(R1s)):
 
 
 ax_tot.set_xlim([-1000,23000])
-ax_tot.set_ylim([1e-3,1e1])
-ax_tot.set_title(u'FFT normalizada de la señal input y output para seguidor LM324 - Filtrada')
+ax_tot.set_ylim([-30,10])
+#ax_tot.set_title(u'FFT normalizada de la señal input y output para seguidor LM324 - Filtrada')
 ax_tot.set_xlabel('Frecuencia [Hz]')
 ax_tot.set_ylabel('Potencia [db]')
 ax_tot.legend(bbox_to_anchor=(1.15, 0.00))
@@ -962,13 +975,13 @@ ax_tot.grid(linewidth=0.5,linestyle='--')
 figname = os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpeta_salida, 'respuestas_r1.png')
 fig_tot.savefig(figname, dpi=300)  
 
-ax_tot.set_ylim([1e-2,1e1])
+ax_tot.set_ylim([-20,10])
 figname = os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpeta_salida, 'respuestas_r1_zoom.png')
 fig_tot.savefig(figname, dpi=300)  
 plt.close(fig_tot)
 
 ax_tot.set_xlim([-10,2000])
-ax_tot.set_ylim([1e-3,1e1])
+ax_tot.set_ylim([-30,10])
 figname = os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpeta_salida, 'respuestas_r1_zoom2.png')
 fig_tot.savefig(figname, dpi=300)  
 plt.close(fig_tot)
@@ -984,6 +997,8 @@ ax = fig.add_axes([.10, .15, .35, .8])
 for j in range(len(frec_comp_ganancia)):
     ganancia_array = np.asarray(ganancia[j])
     ajuste_lineal_ganancia = np.polyfit(R2/R1s_array,ganancia_array,1)
+    
+    print(ajuste_lineal_ganancia[0],ajuste_lineal_ganancia[1])
 
     ax.plot(R2/R1s_array,ganancia_array,'o',color=cmap(float(j)/len(frec_comp_ganancia)),label=str(frec_comp_ganancia[j]) + ' Hz',markersize=10)
     
@@ -993,11 +1008,13 @@ for j in range(len(frec_comp_ganancia)):
 #        ax.text(0.1,0.75,'a: ' '{:6.3f}'.format(ajuste_lineal_ganancia[0]),color=cmap(float(j)/len(frec_comp_ganancia)), transform=ax.transAxes)
 #        ax.text(0.1,0.70,'b: ' '{:6.3f}'.format(ajuste_lineal_ganancia[1]),color=cmap(float(j)/len(frec_comp_ganancia)), transform=ax.transAxes)
 
+ax.plot(R2/R1s_array,1 + R2/R1s_array,'--',color='red',label='Ganancia teórica',linewidth=2)
+
 ax.set_xlim([0,400])    
 ax.set_ylim([0,400])    
-ax.set_title(u'Ganancia vs R2/R1')
+#ax.set_title(u'Ganancia vs R2/R1')
 ax.set_xlabel('R2/R1')
-ax.set_ylabel('Ganancia')
+ax.set_ylabel('Ganancia Tensión')
 ax.legend(loc=2)
 ax.grid(linewidth=0.5,linestyle='--')
 
@@ -1005,7 +1022,7 @@ ax.grid(linewidth=0.5,linestyle='--')
 ax1 = fig.add_axes([.60, .15, .35, .8])
 ax1.plot(R2/R1s_array,ancho_de_banda_array,'o',markersize=10)
 ax1.axvline(50,linestyle='--',color='red',label='Ancho de banda medición')
-ax1.set_title(u'Ancho de banda vs R2/R1')
+#ax1.set_title(u'Ancho de banda vs R2/R1')
 ax1.set_xlabel('R2/R1')
 ax1.set_ylabel('Ancho de banda [Hz]')
 ax1.legend(loc=1)
@@ -1028,9 +1045,9 @@ for j in range(len(frec_comp_ganancia)):
 ax.axvline(20000,linestyle='--',color='red',label='Ancho de banda medición')
    
 ax.set_ylim([0,400])     
-ax.set_title(u'Ganancia vs Ancho de banda')
+#ax.set_title(u'Ganancia vs Ancho de banda')
 ax.set_xlabel('Ancho de banda [Hz]')
-ax.set_ylabel('Ganancia')
+ax.set_ylabel('Ganancia Tensión')
 ax.legend(loc=1)
 ax.grid(linewidth=0.5,linestyle='--')
 
@@ -1040,8 +1057,8 @@ ax1 = fig.add_axes([.60, .15, .35, .8])
 ax1.plot(ganancia_array,ganancia_array*ancho_de_banda_array/1000000,'o',color=cmap(float(j)/len(frec_comp_ganancia)),markersize=10,label=str(frec_comp_ganancia[j]) + ' Hz')
 ax1.axvline(50,linestyle='--',color='red',label='Ancho de banda medición')
 ax1.set_xlim([0,400])     
-ax1.set_title(u'Ganancia*BW vs Ganancia')
-ax1.set_xlabel('Ganancia')
+#ax1.set_title(u'Ganancia*BW vs Ganancia')
+ax1.set_xlabel('Ganancia Tensión')
 ax1.set_ylabel('Ganancia*Ancho de banda [MHz]')
 ax1.legend(loc=1)
 ax1.grid(linewidth=0.5,linestyle='--')
@@ -1050,69 +1067,56 @@ figname = os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpeta_salida, 'g
 fig.savefig(figname, dpi=300)  
 plt.close(fig)
 
+##
+## LOGLOG Ajuste ancho de banda de ganacia unitaria
+
+ancho_de_banda_array_lim = ancho_de_banda_array[0:10]
+ganancia_array_lim = np.asarray(ganancia[0])
+ganancia_array_lim = ganancia_array_lim[0:10]
+ancho_de_banda_array_lim_log = np.log10(ancho_de_banda_array_lim)
+ganancia_array_lim_log = 10*np.log10(ganancia_array_lim)
+
+ajuste = np.polyfit(ancho_de_banda_array_lim_log, ganancia_array_lim_log, 1)
+
+ancho_de_banda_array_aj = np.array([1000,1.0e7])
+
+fig = plt.figure(dpi=250)
+ax = fig.add_axes([.12, .15, .75, .8])
+j = 0
+
+#ax.semilogx(ancho_de_banda_array,-20*np.log(ancho_de_banda_array),'--',color='red',label='20 db/decada')
+
+for j in range(len(frec_comp_ganancia)):
+    ganancia_array = np.asarray(ganancia[j])
+    ax.semilogx(ancho_de_banda_array,10*np.log10(ganancia_array),'o',color=cmap(float(j)/len(frec_comp_ganancia)),label=str(frec_comp_ganancia[j]) + ' Hz',markersize=10)
+
+ax.semilogx(np.array([1e6,2e6]),np.array([0,0]),'--',color='black',alpha=0.5)
+ax.semilogx(np.array([10**(-ajuste[1]/ajuste[0]),10**(-ajuste[1]/ajuste[0])]),np.array([-2,2]),'--',color='black',alpha=0.5)
+ax.semilogx(ancho_de_banda_array_aj,ajuste[1]+ajuste[0]*np.log10(ancho_de_banda_array_aj),'--',color='red',label='Ajuste 200 Hz')
+
+ax.set_ylim([-10,30])    
+ax.set_xlim([1000,1e7])  
+ax.annotate('Ancho de banda \nde ganancia unitaria:' + '{:6.3f}'.format(10**(-ajuste[1]/ajuste[0])/1000000) + ' MHz', xy=(10**(-ajuste[1]/ajuste[0])-100000,-0.5), xytext=(10**(-ajuste[1]/ajuste[0])-1350000,-8),arrowprops=dict(arrowstyle="->"))
+  
+#ax.arrow(10**(-ajuste[1]/ajuste[0])-100000,-0.5,-1000000,-5,'->',color='red',alpha=0.7)
+#ax.text(10**(-ajuste[1]/ajuste[0])-1350000,-7,'Ancho de banda de ganancia unitaria')
+#ax.text(10**(-ajuste[1]/ajuste[0])-1350000,-8.5,'{:6.3f}'.format(10**(-ajuste[1]/ajuste[0])/1000000) + ' MHz')
 
 
+ax.text(0.4,0.9,'Ajuste: ax + b', transform=ax.transAxes)
+ax.text(0.4,0.85,'a: ' '{:6.2f}'.format(ajuste[0])+ ' dB/decada', transform=ax.transAxes)
+ax.text(0.4,0.80,'b: ' '{:6.2f}'.format(ajuste[1])+ ' dB', transform=ax.transAxes)
+ 
+#ax.set_title(u'Ganancia vs Ancho de banda')
+ax.set_xlabel('Ancho de banda [Hz]')
+ax.set_ylabel('Ganancia Tensión [dB]')
+ax.legend(loc=1)
+ax.grid(linewidth=0.5,linestyle='--')
+
+figname = os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpeta_salida, 'ganancia_ancho_de_banda_1_loglog.png')
+fig.savefig(figname, dpi=300)  
+plt.close(fig)
 
 
-#%% Figuras respuesta RUIDO
-
-carpeta_salida = 'LM324'
-subcarpeta_salida = 'Amplificador'
-subsubcarpeta_salida = 'Respuesta_-5V'
-
-R2 = 100000
-R1s = [330,386,464,558,667,775,994,1200,1316,1451,1545,1760,2170,3210,4700,6560,8080,9700,14070,20070,29100,48100,62000,100000]
-
-dato = 'int16'    
-fs = 44100*8  
-ind_nivel = 9
-mic_level = 50
-
-calibracion_CH0_seno = np.load(os.path.join('Calibracion',dato, 'Seno_CH0' +  '_wm'+str(mic_level)+'_'+dato+'_ajuste.npy'))
-calibracion_CH1_seno = np.load(os.path.join('Calibracion',dato, 'Seno_CH1'+  '_wm'+str(mic_level)+'_'+dato+'_ajuste.npy'))
-
-
-delay = 0.2
-med = 0.5
-
-std_ruido_input = np.array([])
-std_ruido_output = np.array([])
-
-
-for i in range(len(R1s)):
-    
-    
-    R1 = R1s[i]
-    print(R1)
-
-    data_out1 = np.load(os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpeta_salida, 'data_out_R2_'+str(R2)+'_R1_'+str(R1)+'.npy'))
-    data_in1 = np.load(os.path.join(carpeta_salida,subcarpeta_salida,subsubcarpeta_salida, 'data_in_R2_'+str(R2)+'_R1_'+str(R1)+'.npy'))
-    
-    
-    # Calibracion de los canales
-    data_in1[:,:,0] = (data_in1[:,:,0]-calibracion_CH0_seno[1]*2**16)/(calibracion_CH0_seno[0]*2**16)
-    data_in1[:,:,1] = (data_in1[:,:,1]-calibracion_CH1_seno[1]*2**16)/(calibracion_CH1_seno[0]*2**16)
-        
-    
-    ruido_ch0 =data_in1[0,int(fs*delay):int(fs*delay)+int(fs*med),0]
-    ruido_ch1 =data_in1[0,int(fs*delay):int(fs*delay)+int(fs*med),1]
-    
-    std_ruido_input = np.append(std_ruido_input,np.std(ruido_ch0))
-    std_ruido_output = np.append(std_ruido_output,np.std(ruido_ch1))
-
-
-plt.plot(std_ruido_input,'o')
-plt.plot(std_ruido_output,'o')
-
-
-R1s_array = np.asarray(R1s)
-ancho_de_banda_array = np.asarray(ancho_de_banda)
-
-plt.plot(std_ruido_input,'o')
-plt.plot(R2/R1s_array,std_ruido_output/std_ruido_input,'o')
-
-
-
-#%% SNR y FIGURE NOISE
 
 
