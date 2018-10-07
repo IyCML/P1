@@ -24,6 +24,8 @@ import scipy
 from P1_funciones import play_rec
 from P1_funciones import signalgen
 from P1_funciones import sincroniza_con_trigger
+from P1_funciones import fft_power_density
+
 
 params = {'legend.fontsize': 14,
           'figure.figsize': (14, 9),
@@ -107,22 +109,14 @@ ch_send = 0
 ch_acq = 0
 frec_comp = 10000
 
-fft_send1 = abs(fft.fft(data_out1[paso,:,ch_send]))**2/int(data_out1.shape[1]/2+1)/fs
-fft_send1 = fft_send1[0:int(data_out1.shape[1]/2+1)]
-fft_acq1 = abs(fft.fft(data_in1[paso,:,ch_acq]))**2/int(data_in1.shape[1]/2+1)/fs
-fft_acq1 = fft_acq1[0:int(data_in1.shape[1]/2+1)]
-
-frec_send1 = np.linspace(0,int(data_out1.shape[1]/2),int(data_out1.shape[1]/2+1))
-frec_send1 = frec_send1*(fs/2+1)/int(data_out1.shape[1]/2+1)
-frec_acq1 = np.linspace(0,int(data_in1.shape[1]/2),int(data_in1.shape[1]/2+1))
-frec_acq1 = frec_acq1*(fs/2+1)/int(data_in1.shape[1]/2+1)
+frec_acq1,fft_acq1 = fft_power_density(data_in1[paso,:,ch_acq],fs)
+frec_send1,fft_send1 = fft_power_density(data_out1[paso,:,ch_send],fs)
 
 frec_ind_acq = np.argmin(np.abs(frec_acq1-frec_comp))
 frec_ind_send = np.argmin(np.abs(frec_send1-frec_comp))
 
 # Interpolo para poder normalizar
 #fft_acq1_interp = np.interp(frec_send1, frec_acq1, fft_acq1)
-
 
 
 fft_norm1 = fft_acq1/fft_acq1[frec_ind_send]/(fft_send1/fft_send1[frec_ind_send])
@@ -335,15 +329,11 @@ ch_send = 1
 ch_acq = 1
 frec_comp = 10000
 
-fft_send2 = abs(fft.fft(data_out2[paso,:,ch_send]))**2/int(data_out2.shape[1]/2+1)/fs
-fft_send2 = fft_send2[0:int(data_out2.shape[1]/2+1)]
-fft_acq2 = abs(fft.fft(data_in2[paso,:,ch_acq]))**2/int(data_in2.shape[1]/2+1)/fs
-fft_acq2 = fft_acq2[0:int(data_in2.shape[1]/2+1)]
+frec_acq2,fft_acq2 = fft_power_density(data_in2[paso,:,ch_acq],fs)
+frec_send2,fft_send2 = fft_power_density(data_out2[paso,:,ch_send],fs)
 
-frec_send2 = np.linspace(0,int(data_out2.shape[1]/2),int(data_out2.shape[1]/2+1))
-frec_send2 = frec_send2*(fs/2+1)/int(data_out2.shape[1]/2+1)
-frec_acq2 = np.linspace(0,int(data_in2.shape[1]/2),int(data_in2.shape[1]/2+1))
-frec_acq2 = frec_acq2*(fs/2+1)/int(data_in2.shape[1]/2+1)
+frec_ind_acq = np.argmin(np.abs(frec_acq1-frec_comp))
+frec_ind_send = np.argmin(np.abs(frec_send1-frec_comp))
 
 frec_ind_acq = np.argmin(np.abs(frec_acq2-frec_comp))
 frec_ind_send = np.argmin(np.abs(frec_send2-frec_comp))

@@ -1,0 +1,480 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[spanish,es-tabla]{babel}
+% \usepackage[spanish,es-tabla]{babel}
+
+\selectlanguage{spanish}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{cleveref}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{fullpage} % changes the margin
+\usepackage{gensymb}
+\usepackage{siunitx}
+
+\begin{document}
+%Header-Make sure you update this information!!!!
+\noindent
+\large\textbf{Instrumentación y Control} \hfill  Leslie Cusato, Marco Petriella\\
+\textbf{Práctica 1}   \\
+Fecha de entrega: 03/10/18 \\
+
+
+\section*{Caracterización de componentes electrónicos mediante una placa de audio }
+El objetivo fue caracterizar distintos componentes electrónicos utilizando la placa de audio de una PC como generador y sensor de señales. Para ello primero se caracterizó el sistema emisor-receptor que constituyen las salidas y entradas de la placa. Teniendo en cuenta las características de este sistema se utilizó para medir la curva característica de un diodo y obtener algunas especificaciones de un OpAmp.%\cite[p.219]{Robotics}. Here's Another Citation\cite{Flueck}
+Se analizaron distintos parámetros de la placa de audio para su caracterización. Para ello se realizó una rutina de escritura y adquisición (\textit{playrec}\footnote{https://github.com/IyCML/P1/blob/desarrollo/P1 \_funciones.py}) cuyo diagrama general se muestra en la Figura \ref{fig:esquema_adquisiciona} . Aquí la placa es usada como un generador de funciones (parlante) de dos canales y un osciloscopio de dos canales, utilizando la librería pyaudio. 
+% La función encargada de la adquisición  acepta una matriz de tres dimensiones donde se guarda la señal que se quiere enviar en cada canal de salida. La primera dimensión es la cantidad de pasos del barrido que se quiere realizar. La segunda es la cantidad de muestras enviadas y depende de la duración de la señal enviada y la frecuencia de sampleo según la relación $muestras=frec_{sampleo}*duracion_{signal}$. La tercera dimensión indica el canal de salida (CH0 y CH1).
+Una vez que se recibe la matriz, se definen los buffer de salida y de entrada. El buffer de salida tiene el tamaño en bytes equivalente a cada fila del barrido. El buffer de entrada es siempre más grande, pues se contempla la adquisición de ceros al principio de la medición debido al retardo entre la señal enviada y la señal adquirida. Además se obliga a que el número de muestras del buffer de entrada sea múltiplo de una potencia de 2.
+Una vez definido los buffers se lanzan dos hilos de procesamiento encargados de la escritura de los datos en el buffer de salida (hilo productor) y la lectura de los datos del buffer de entrada (hilo consumidor). La comunicación entre los dos hilos se realiza con dos variables de tipo lock. La primera se activa cada vez que el productor escribe la señal en el buffer de salida y avisa al consumidor que puede empezar la adquisición. El segundo lock se activa en el consumidor cada vez que se termina de leer el buffer de entrada y se guardó la señal en la matriz de salida, y avisa al productor que puede comenzar el envío del siguiente paso del barrido.
+Por último se agrega la posibilidad de corregir el retardo de la medición a partir de encontrar el máximo de la correlación cruzada entre la señal digital enviada y la señal adquirida.
+
+\begin{figure} [H]
+\centering
+\includegraphics[scale=0.85]{esquema_adquisicion.png}
+\caption{Esquema de adquisición. \label{fig:esquema_adquisiciona}}
+\end{figure} 
+
+% DIAGRAMA DE FLUJO DEL CODIGO
+Analizamos la respuesta en frecuencia para conocer el ancho de banda y el rango de trabajo del sistema emisor-receptor. Para esto enviamos una señal sinusoidal con un chirp en frecuencias de tipo lineal y frecuencias de 0 a 23 kHz. %DIAGRAMA DE SEÑAL CHIRP
+En la Figura  \ref{fig:chirp} se observa un detalle de la señal chirp enviada a baja frecuencia y la señal medida. 
+
+\begin{figure} [H]
+\centering
+\includegraphics[scale=0.42]{chirp_baja_tiempo.png}
+\caption{Detalle de la señal sinusoidal con chirp enviada y adquirida con el sistema.\label{fig:chirp}}
+\end{figure}
+Se realizó una calibración de los canales de entrada y de salida de la placa. En el caso de la señal de salida (parlante) se envió un seno de frecuencia 500 Hz en ambos canales (CH0 y CH1), y se varió el nivel del parlante de la consola de Windows 10 a la vez que se midió con un multímetro el valor de tensión RMS en modo tensión alterna. La conversión de RMS a amplitud para un seno sigue la relación (\ref{eq:amp})
+\begin{equation}\label{eq:amp}
+Amplitud[V]=RMS[V]{\sqrt2}
+\end{equation}
+La calibración se realizó con el máximo nivel de parlante del sistema posible. Para el caso de la señal de entrada, se envió un seno de frecuencia 1 kHz y amplitud constante 0.4 V, y se varió el nivel de micrófono de la consola de Windows. 
+
+Por otro lado se estudió el ruido de la placa y el crosstalk entre canales. Se midió el nivel de ruido al medir un cero (o tierra) en ambos canales de entrada. Al hacer esto estamos considerando todas las fuentes de ruido posibles como ser ruido de digitalización, lectura, ruido de temperatura (o ancho de banda) del circuito de entrada y ruido de la tierra. Además, se estudió la dependencia del ruido con el nivel del micrófono y la relación señal a ruido. Para esta última, se envió una señal seno de amplitud fija tal que no sature la entrada para cada nivel de micrófono. Con la señal obtenida se realizó la descomposición espectral utilizando la transformada rápida de Fourier ($FFT$) y se calculó el cociente entre el pico ubicado a la frecuencia enviada y el nivel basal. Para medir el crosstalk entre canales se envió una señal seno de frecuencia fija en el canal 0, y cero en el canal 1, y luego se calculó el cociente entre las SNR de ambos a la frecuencia enviada. Para la medición del ruido y crosstalk se consideró la magnitud de densidad de potencia espectral ($psdx$) obtenida a partir del computo de la $FFT$, según la siguiente relación (\ref{eq:psdx}):
+
+\begin{equation}\label{eq:psdx}
+psdx = \frac{1}{F_sN} abs(FFT)^{2}
+\end{equation}
+
+Donde $F_s$ es la frecuencia de sampleo de la placa, $N$ la cantidad de muestras de la medición, y $FFT$ son las componentes de frecuencias positivas de la transformada rápida de Fourier
+
+Se estudió la exactitud y la resolución en frecuencias de la placa de audio. Para la exactitud consideramos la diferencia en la frecuencia entre la señal enviada y la adquirida; mientras que para la resolución se envió una señal compuesta por dos frecuencias cercanas y se vio si era posible distinguirlas en el espectro de frecuencias medido. En este caso medimos ambos parámetros con un sólo experimento que consiste en enviar una señal suma de dos senos a frecuencias 1023.020 Hz y 1023.022 Hz. La medición se realizó a una frecuencia de sampleo de 44100 Hz y se eligió una duración de la señal de 1000 segundos para asegurarnos tener un espaciado en frecuencias en el espectro de 1 mHz (recordar que el sampleo en frecuencias en el espectro es la inversa de la duración de la señal). En principio podríamos utilizar señales de mayor duración para mejorar el sampleo en frecuencias pero esto no fue posible por limitaciones en el buffer de salida de la placa de audio.
+Una vez estudiado y caracterizado el sistema emisor-receptor de la placa de audio, se utilizó para caracterizar un diodo y un amplificador operacional. Para ello se tuvieron en cuenta las restricciones impuestas por el sistema, dado su ancho de banda.
+Con el sistema caracterizado se midió la curva I-V del diodo según el esquema de la Figura \ref{fig:esquemadiodo}. Para ello enviamos una señal sinusoidal de amplitud mayor a la caída típica del diodo a fin de asegurarnos de polarizar el diodo. La resistencia se utiliza para limitar la corriente y se decide utilizar una de valor de 82 $\Omega$ obteniendo un valor máximo de corriente de 10 mA. Con valores de resistencia menores se obtienen mayores valores de corriente, pero evitamos utilizar resistencias menores para no forzar el emisor. Con una resistencia de 10 $\Omega$ se observa una caída en la tensión entre las terminales de salida, señal que le estamos pidiendo más corriente de la que está preparada.
+
+\begin{figure} [H]
+\centering
+\includegraphics[scale=0.75]{esquema.png}
+\caption{Esquema del circuito utilizado para la medición de la curva I-V del diodo \label{fig:esquemadiodo}}
+\end{figure} 
+A continuación nos propusimos medir el factor de idealidad  del diodo (n) a partir de variar la temperatura del diodo. Si tenemos en cuenta el modelo del diodo vemos que el umbral de polarización depende de la temperatura según la relación (\ref{eq:diodoT}):
+\begin{equation}\label{eq:diodoT}
+I=I_S(e^{\frac{V_D}{nV_T}}-1)
+\end{equation}
+
+con $V_T=\frac{KT}{q}$ donde $K$ es la constante de Boltzmann, $T$ la temperatura del diodo, y $q$ la carga del electrón. Por lo tanto al aumentar la temperatura esperamos observar una disminución del umbral de polarización. Luego ajustamos los resultados a la curva del diodo y estimamos el valor de n.
+Para variar la temperatura del diodo se dispuso una fuente de corriente con control PI diseñada para estabilizar la temperatura al utilizar celdas Peltiers. La fuente modelo Wavelength 3293, utiliza un termistor de 10K para medir la temperatura, y dispone de una entrada ($V_{set}$) para fijar la temperatura deseada y dos salidas de tensión para monitorear las temperaturas fijada ($T_{set}$) y actual ($T_{act}$). Para la conversión de tensión a temperatura, necesaria para determinar $V_{set}$ $T_{set}$ y $T_{act}$, se utilizan los coeficientes de Steinhart del termistor y la corriente de bias ($I_{bias}$) fijada en el termistor  de 100  ${\mu A}$. Para ello basta considerar la ecuación del Steinhart del termistor (\ref{eq:steinh_1}) donde T es la temperatura y A, B, C los coeficientes de Steinhart del termistor.
+\begin{equation}\label{eq:steinh_1}
+\frac{1}{T} = A + B\ln(R)+ C[\ln(R)]^3
+\end{equation}
+Así podemos relacionar las tensiones actual y fijada ($V_{act}$ y $V_{set}$) con las temperaturas actual y fijada ($T_{act}$ y $T_{set}$) según (\ref{eq:steinh_2})
+
+\begin{equation}\label{eq:steinh_2}
+\frac{1}{T_{set,act}} = A + B\ln(\frac{V_{set,act}}{I_{bias}})+ C[\ln(\frac{V_{set,act}}{I_{bias}})]^3
+\end{equation}
+
+Para el control del experimento se utilizó una Arduino Due que permitió tanto la medición de la tensión actual ($V_{act}$) como el ajuste de la tensión deseada ($V_{set}$) a partir de la salida digital-analógica DAC0.  La comunicación entre la Arduino Due y la PC se realizó con la librería PySerial. En la Figura \ref{fig:esquema_temp} se muestra un esquema del dispositivo experimental.
+
+\begin{figure} [H]
+\centering
+\includegraphics[scale=0.75]{esquema_temp.png}
+\caption{ Esquema del dispositivo experimental. \label{fig:esquema_temp}}
+\end{figure} 
+
+En la Figura \ref{fig:esquema_arduino} se muestra un esquema del programa de control y adquisición del dispositivo experimental. En Python se fija la temperatura deseada ($T_{set}$) y se manda al buffer de la arduino quien lee la temperatura enviada. La arduino fija la tensión correspondiente  ($V_{set}$) utilizando la ecuación de Steinhart y la manda a la salida DAC0. La arduino además mide las tensiones $V_{act}$ y $V_{set}$, y las envia a Python con la temperatura $T_{set}$ leida. Cuando la temperatura leida por Python es la misma a la enviada, se esperan 2 minutos  a que la temperatura $T_{act}$ se estabilice en el valor $T_{set}$ y se realiza la medición de la curva I-V con la placa de audio (guardando el valor $T_{act}$ asignado a la medición). Luego se fija un nuevo valor de temperatura  $T_{set}$ y se repite el proceso, hasta terminar todo el barrido de temperaturas. En nuestro caso se realizó un barrido de \SI{10}{\celsius}  a \SI{38}{\celsius} cada \SI{2}{\celsius}.
+
+\begin{figure} [H]
+\centering
+\includegraphics[scale=0.75]{esquema_arduino.png}
+\caption{ Esquema del programa de control. \label{fig:esquema_arduino}}
+\end{figure} 
+En cuanto al amplificador operacional se estudió un LM324 en modo amplificador no inversor según el esquema de la Figura \ref{fig:amplificador}. Se buscó verificar la validez de la curva de ganancia teórica dada por la relación (\ref{eq:opamp}) y estudiar el ancho de banda del op-amp a medida que aumentamos la ganancia del mismo.
+\begin{equation}\label{eq:opamp}
+ G = 1 + \frac{R2}{R1}   
+\end{equation}
+
+\begin{figure} [H]
+\centering
+\includegraphics[scale=0.75]{amplificador.png}
+\caption{ Esquema amplificador no inversor. \label{fig:amplificador}}
+\end{figure} 
+Se estudió el comportamiento del circuito para distintos valores de ganancias y para distintas frecuencias de entrada. Para ello fuimos variando la resistencia R1 (R2 fijo en 100 K$\Omega$ y C de 22 pF), y medimos la entrada y salida del opamp al enviar un seno con chirp. De esta manera la obtención de la ganancia para cada frecuencia es simplemente la relación entre la respuesta espectral del chirp a la entrada y salida del circuito. Teniendo en cuenta la limitación en el rango de tensión de entrada de la placa de audio, se eligieron amplitudes de entrada al opamp lo suficientemente bajas para no saturar la placa con la salida del opamp.
+
+\section*{Resultados}
+\subsection*{Caracterización de la placa}
+Para medir el ancho de banda de la placa, se estudió el espectro en potencia de la señal digital enviada y la señal adquirida ambas normalizadas al valor correspondiente a 10 kHz, donde la respuesta es plana (figura \ref{fig:chirp_detalle}). Vemos que la respuesta del sistema emisor-receptor está limitada a aproximadamente 21 kHz mientras la de la señal digital llega a los 23 kHz. Si prestamos atención a las bajas frecuencias observamos un ripple en el espectro, tanto en la señal digital enviada como en la medida (Figura \ref{fig:chirp_detalle} derecha). Esto se debe a que la señal digital enviada empieza y termina con un cero de manera abrupta. Una forma de atenuar este tipo de ripple es suavizando el inicio y final de señal digital enviada. En nuestro caso decidimos normalizar la respuesta en frecuencias de la señal enviada por la esperada de la señal digital obteniendo la respuesta real (Figura \ref{fig:chirp_detalle} izquierda). De esta manera calculamos el ancho de banda del sistema a partir de los valores de frecuencia para los cuales la potencia cae a la mitad siendo los mismos 7 Hz y 20187 Hz.
+A modo de comparación consideramos también la respuesta en frecuencias al enviar una señal sinusoidal por cada frecuencia deseada. En la Figura \ref{fig:comparacionancho} se observan las mediciones correspondientes a los métodos de chirp y de barrido, donde se observan resultados similares. 
+
+\begin{figure} [H]
+\centering
+\includegraphics[scale=0.45]{chirp_detalle.png}
+\caption{Izquierda. En naranja espectro del chirp enviado, en azul y verde espectro de la señal recibida antes y después de la normalización. Derecha. Detalle a baja frecuencia donde se observa ripple en el espectro de la señal recibida y enviada debido al corte abrupto en el tiempo de las mismas. Al normalizar el espectro recibido con el enviado el ripple desaparece (verde).   \label{fig:chirp_detalle}}
+\end{figure}
+
+
+\begin{figure} [H]
+\centering
+\includegraphics[scale=0.45]{comparacion_detalle.png}
+\caption{Comparación entre método chirp y barrido en frecuencia para el cálculo del ancho de banda del sistema.\label{fig:comparacionancho}}
+\end{figure} 
+
+En la Figura \ref{fig:calib_parlante} se muestra la curva de amplitud en función del nivel de parlante para los canales CH0 y CH1 de salida al enviar un seno de 500H z. La máxima tensión de salida es de 3.2 V para un nivel de parlante 100/100.
+
+\begin{figure} [H]
+\centering
+\includegraphics[scale=0.4]{respuesta_por_nivel_parlante.png}
+\caption{Amplitud de tensión de salida en función del nivel de parlante.\label{fig:calib_parlante}}
+\end{figure} 
+
+ En la Figura \ref{fig:calibmic} se muestran las rectas de calibración para los distintos niveles de micrófono al enviar una señal de 1 kHz y amplitud constante de 0.4 V. El tipo de dato de entrada es un entero de 16 bits por lo que el rango en cuentas queda determinado por los valores[$-2^{15}$,$2^{15}$] es decir [-32767,+ 32768]. Una vez que se supera el rango la medición satura. Cabe destacar que la placa admite la adquisición en enteros de 32 bits, pero esto no significa mayor resolución pues los valores posibles están distanciados siempre por $2^{16}$  cuentas.
+En la Figura \ref{fig:ejemplo_rangomic} se muestra un ejemplo de señal enviada y adquirida, y su correspondiente ajuste lineal al utilizar un nivel de micrófono 100/100. 
+Luego se comprobó que el rango de la entrada está limitado en aproximadamente $\pm$ 2.10 V, siendo que las mediciones que superaban dicho valor de tensión saturaban la entrada (figura \ref{fig:calib_microfono2})
+
+\begin{figure}[H]
+        \begin{subfigure}[b]{0.5\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{respuesta_por_nivel_mic.png}
+                \caption{} \label{fig:calibmic}
+        \end{subfigure}%
+        \begin{subfigure}[b]{0.5\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{ajuste_CH0_Seno_wm100_int16.png}
+                \caption{} \label{fig:ejemplo_rangomic}
+        \end{subfigure}%
+        \caption{a) Señal adquirida vs. señal enviada para distintos niveles de micrófono al enviar un seno de amplitud constante. b) Detalle de señal y ajuste lineal para nivel de micrófono 100/100.}\label{fig:calib_microfono}
+\end{figure}
+
+\begin{figure} [H]
+\centering
+\includegraphics[scale=0.4]{respuesta_por_nivel_microfono_rango.png}
+\caption{Valor absoluto del rango de tensión de entrada en función del nivel de micrófono.\label{fig:calib_microfono2}}
+\end{figure} 
+Para estudiar el ruido de la placa se realizó analizó el histograma de ruido en tensión y cuentas para distintos niveles de micrófono (Figura \ref{fig:ruidocuentas}). Dado que la distribución es gaussiana consideramos la desviación estándar (STD) como medida del ruido. Al analizar la dependencia del ruido con el nivel de micrófono (Figura \ref{fig:ruidomic}) se observa un aumento de los niveles de ruido en cuentas a medida que aumentamos la amplificación de la señal. Esto conlleva una disminución en tensión de dichos niveles de ruido (al utilizar las calibraciones de las curvas de figura \ref{fig:calibmic}). Esto nos estaría indicando que la relación señal a ruido de la señal adquirida (SNR) debería mejorar a medida que aumentamos el nivel de micrófono (sin saturar la señal).
+
+\begin{figure} [H]
+\centering
+\includegraphics[scale=0.4]{ruido_cuentas_v_ch0.png}
+\caption{Distribución de ruido en tensión y cuentas. La conversión a tensión se realizó utilizando la calibración del micrófono para un nivel de 50/100.\label{fig:ruidocuentas}}
+\end{figure} 
+
+\begin{figure} [H]
+\centering
+\includegraphics[scale=0.45]{ruido_nivel_microfono_ch0.png}
+\caption{Desviación estándar del ruido (STD) en función del nivel de micrófono en cuentas (azul) y tensión (rojo). Si bien se observa un aumento del ruido en cuentas al aumentar el nivel de micrófono, el ruido en tensión baja. \label{fig:ruidomic}}
+\end{figure} 
+Para medir la relación señal a ruido (SNR) enviamos una señal seno de 1023 Hz y de amplitud fija de 0.3 V, de manera de asegurarnos no saturar la entrada para cada nivel de micrófono. En la Figura \ref{fig:potencia_mic100} se muestra la densidad de potencia espectral. Para calcular la SNR en potencia realizamos el cociente entre el pico ubicado en 1023 Hz y el nivel basal (el promedio de la potencia espectral en el rango 1050 a 1500 Hz). En la Figura \ref{fig:snr} graficamos los valores en función del nivel de micrófono, donde observamos una mejora de la relación señal a ruido (azul) a medida que aumentamos en nivel de micrófono debido a una disminución de los niveles de ruido (rojo). Esto era esperable teniendo en cuenta la disminución de la desviación estándar del ruido a medida que aumentamos el nivel de micrófono que se observó al medir 0 V ( Figura \label{fig:ruidomic}).
+
+\begin{figure} [H]
+\centering
+\includegraphics[scale=0.42]{potencia_mic100.png}
+\caption{Espectro de potencias de señal sinusoidal de 1023 Hz utilizada para la medición de la SNR. Esta se calcula como la relación entre el pico y el valor basal del espectro de potencias. \label{fig:potencia_mic100}}
+\end{figure} 
+
+\begin{figure} [H]
+\centering
+\includegraphics[scale=0.42]{snr_microfono_ch0.png}
+\caption{SNR para el canal CH0 (azul) y promedio del valor basal del ruido entre 1050 Hz y 1500 Hz (rojo) para distintos niveles de micrófono. Se observa un aumento del SNR a medida que aumentamos el nivel de micrófono debido a una disminución de los niveles de ruido. \label{fig:snr}}
+\end{figure} 
+Para la medición de crosstalk se calculó la SNR de cada canal %envió una señal seno a una frecuencia de 1023 Hz en el canal CH0 y medimos un cero en el canal CH1, y luego medimos en los gráficos de densidad de potencia espectral las relación señal a ruido de ambos canales 
+(Figura \ref{fig:crosstalk_mic100} ). En este caso obtenemos un valor de SNR de orden 12 en el canal CH0 y de orden 2 en el canal CH1,  y por lo tanto a una relación de SNR de orden 10 entre canales (equivalente a un orden 5 en amplitud).  Es decir que si medimos señales del orden de 1 V en el canal CH0 es esperable un nivel de señal de 10 mV en el canal CH1.
+
+\begin{figure} [H]
+\centering
+\includegraphics[scale=0.42]{crosstalk_mic100.png}
+\caption{Crosstalk entre canales CH0 y CH1. \label{fig:crosstalk_mic100}}
+\end{figure} 
+ En la Figura  \ref{fig:resolucion_frecuencia} observamos el espectro de frecuencias de la señal enviada y adquirida, donde verificamos que las frecuencias medidas son las mismas que las enviadas y además observamos que es posible distinguir frecuencias cercanas, en nuestro caso distanciadas por 2 mHz. Por lo tanto podemos asegurar que tanto la exactitud como la resolución en frecuencias es por lo menos 1 mHz equivalente a 1 ppm (tener en cuenta que la relación entre la resolución y la frecuencia enviada es de $10^{-6}$)
+
+\begin{figure} [H]
+\centering
+\includegraphics[scale=0.45]{resolucion_frecuencia.png}
+\caption{Espectro de frecuencias de señal enviada y adquirida de una suma de senos a 1023.020 Hz y 1023.022 Hz. Se verifica que la exactitud y la resolución en frecuencias es mejor a 1 mHz.\label{fig:resolucion_frecuencia}}
+\end{figure} 
+\subsection*{Hoja de datos}
+A modo de conclusión, pudimos confeccionar la siguiente tabla que resume las características principales del sistema:
+\begin {table}[H]
+\begin {center}
+ \begin{tabular} {|l|c|}
+        \hline
+        Ancho de banda & 20kHz \\
+        \hline
+        Rango de frecuencia & 7 Hz - 20 kHz\\
+        \hline
+        Máxima tensión de salida  & 3.2 V\\
+        \hline
+        Máxima tensión de entrada  & 2.10 V\\
+        \hline
+        Resolución de la entrada  & 16 bits\\
+        \hline
+	\multicolumn{2}{|l|}{Ruido entrada (@ fs: 352800 Hz)} \tabularnewline
+        \hline
+        0 V (@ mic 10/100) & Std: 1.036 cts (973 $\mu V$)  - 8.5 $ \frac{\mu V}{\sqrt{Hz}}$ \\
+        0 V (@ mic 100/100) & Std: 1.558 cts (26 $\mu V$) - 0.38 $ \frac{\mu V}{\sqrt{Hz}}$ \\
+        \hline
+         seno 1023 Hz, 0.3 V amp (@ mic 10/100) & 9.1 $ \frac{\mu V}{\sqrt{Hz}}$\\
+	seno 1023 Hz, 0.3 V amp (@ mic 100/100) & 0.49 $ \frac{\mu V}{\sqrt{Hz}}$\\
+        \hline
+	\multicolumn{2}{|l|}{SNR potencia (@ fs: 352800 Hz)} \tabularnewline
+        \hline
+         seno 1023 Hz, 0.3 V amp (@ mic 10/100) & 95 dB \\
+	seno 1023 Hz, 0.3 V amp (@ mic 100/100) & 120 dB \\
+	\hline
+	\multicolumn{2}{|l|}{Crosstalk potencia (CH0 a CH1) (@ fs: 352800 Hz)} \tabularnewline
+	\hline
+        seno 1023 Hz, 0.3 V amp (@ mic 10/100) & 91 dB \\
+	seno 1023 Hz, 0.3 V amp (@ mic 100/100) & 97 dB \\
+        \hline
+\multicolumn{2}{|l|}{Frecuencia (@ fs: 44100 Hz) } \tabularnewline
+        \hline
+	Exactitud (@ seno 1023 Hz, 0.5 V Amp, 1000 s)  & 1 mHz (1 ppm @ 1000 Hz) \\
+	Resolución (@ seno 1023 Hz, 0.5 V Amp, 1000 s) & 1 mHz (1 ppm @ 1000 Hz) \\
+        % \hline
+        % ADSDASD & ADASDAD\\
+        \hline
+ \end{tabular}
+ \caption{Tabla de especificaciones del sistema emisor -receptor de la placa de sonido utilizada. Todas las mediciones fueron hechas a \SI{20}{\celsius} - \SI{25}{\celsius}}
+ \label{table1}
+ \end{center}
+\end{table}
+
+\section*{Caracterización de componentes}
+
+\subsection*{Diodo}
+\subsubsection*{Curva I-V}
+En la Figura \ref{fig:caida_diodo_res_1N4007_82_20C_500hz_sin_corregir_offset_ajuste} se observa la caída de tensión total en el diodo y resistencia y la caída de tensión en la resistencia. La caída de tensión en la resistencia es cero a menos que el diodo se polarice con una tensión de umbral de aproximadamente 0.6 V. Como se puede observar en el gráfico a medida que transcurre la medición la tensión de la resistencia tiene un offset negativo que se estabiliza en -0.2 V. Esto es debido a que la respuesta a baja frecuencia del receptor está limitada y por lo tanto al perder la componente continua la señal sufre un corrimiento en tensión. En el gráfico se muestra el ajuste del decaimiento obteniendo un tiempo característico de 0.034 s. Notar que la caída total no sufre ningún corrimiento en tensión debido a que la señal no tiene componente de baja frecuencia. 
+En la Figura \ref{fig:caida_diodo_res_1N4007_82_20C_500hz_fft} se muestra cómo al corregir la caída de tensión con un offset, se le está agregando una componente de baja frecuencia que el receptor recorta. En la Figura \ref{fig:caida_diodo_res_1N4007_82_20C_500hz} se muestra el detalle de la caída de tensión total, la caída en la resistencia corregida y la caída de tensión en el diodo como diferencia de las dos primeras.
+
+\begin{figure} [H]
+\centering
+\includegraphics[scale=0.45]{caida_diodo_res_1N4007_82_20C_500hz_sin_corregir_offset_ajuste.png}
+\caption{Caída de tensión total y sobre la resistencia al iniciar la medición. La caída que se observa a medida que transcurre la medición es debido a la limitación a baja frecuencia de la entrada. \label{fig:caida_diodo_res_1N4007_82_20C_500hz_sin_corregir_offset_ajuste}}
+\end{figure} 
+
+\begin{figure} [H]
+\centering
+\includegraphics[scale=0.42]{caida_diodo_res_1N4007_82_20C_500hz_fft.png}
+\caption{Corrimiento en tensión debido a limitaciones en el ancho de banda. Al corregir la señal estamos agregando una componente de frecuencia 0 Hz (componente continua) que es recortada por la entrada. \label{fig:caida_diodo_res_1N4007_82_20C_500hz_fft}}
+\end{figure} 
+
+\begin{figure} [H]
+\centering
+\includegraphics[scale=0.4]{caida_diodo_res_1N4007_82_20C_500hz.png}
+\caption{Corrimiento en tensión debido a limitaciones en el ancho de banda. Al corregir la señal estamos agregando una componente de frecuencia 0 Hz (componente continua) que es recortada por la entrada. \label{fig:caida_diodo_res_1N4007_82_20C_500hz}}
+\end{figure} 
+
+Con la caída de tensión en la resistencia obtenemos la corriente y entonces podemos realizar curva I-V del diodo (Figura \ref{fig:curva_diodo_1N4007_82_20C_500hz}). En el gráfico mostramos la curva del diodo obtenida al considerar por un lado los flancos positivos de tensión de polarización y por el otro los flancos negativos, observándose histéresis en la curva I-V. 
+
+\begin{figure} [H]
+\centering
+\includegraphics[scale=0.4]{curva_diodo_1N4007_82_20C_500hz.png}
+\caption{Curva I-V de diodo 1N4007. Se observa histéresis entre el la medición correspondiente al flanco de tensión positivo y negativo. \label{fig:curva_diodo_1N4007_82_20C_500hz}}
+\end{figure} 
+
+%\begin{figure} [H]
+%\centering
+%\includegraphics[scale=0.45]{ajuste_diodo_1N4007_82_20C_500hz.png}
+%\caption{Ajuste exponencial de la curva I-V correspondiente al flanco positivo de tensión. \label{fig:ajuste_diodo_1N4007_82_20C_500hz}}
+%\end{figure} 
+
+
+\subsubsection*{Factor de idealidad n}
+
+En la Figura \ref{fig:curva_diodo_creciente_temperatura} se muestran las curvas I-V del diodo 1N4007 para las distintas temperaturas correspondientes al flanco positivo al enviar una señal sinusoidal de 1000 Hz.Como era esperable se observa una disminución del umbral de polarización a medida que se aumenta la temperatura del diodo.
+
+\begin{figure} [H]
+\centering
+\includegraphics[scale=0.45]{curva_diodo_creciente_temperatura.png}
+\caption{Curva I-V del diodo 1N4007 para distintas temperaturas. \label{fig:curva_diodo_creciente_temperatura}}
+\end{figure} 
+
+A continuación realizamos el ajuste para cada una de las curvas según el modelo del diodo (\ref{eq:diodoT}). De esta manera obtenemos un valor de $V_T*q/K$ para cada valor de temperatura, que graficamos a continuación en la Figura \ref{fig:factor_linealidad_creciente} para el flanco positivo. Mostramos también los ajustes lineales cuya pendiente representa el factor de idealidad n, obteniendo valores de 1.58 y 1.15 para los flancos positivos y negativos respectivamente. Cabe destacar que la ordenada al origen en ambos casos no es cero obteniendo un valor de $45 K$ y $227 K$ para los flancos positivos y negativos respectivamente.
+
+\begin{figure} [H]
+\centering
+\includegraphics[scale=0.45]{factor_linealidad_creciente.png}
+\caption{Factor de idealidad n del diodo 1N4007 obtenido a partir del ajuste de las curvas I-V correspondientes al flanco positivo del seno. El factor n es la pendiente del ajuste en gráfico $V_T*q/K$ vs. $ T$, en este caso n = 1.58.\label{fig:factor_linealidad_creciente}}
+\end{figure} 
+
+%\begin{figure} [H]
+%\centering
+%\includegraphics[scale=0.45]{factor_linealidad_decreciente.png}
+%\caption{Factor de idealidad n del diodo 1N4007 obtenido a partir %del ajuste de las curvas I-V correspondientes al flanco negativo %del seno.  El factor n es la pendiente del ajuste en gráfico %$V_T*q/K$ vs. $ T$, en este caso n = %1.15.\label{fig:factor_linealidad_decreciente}}
+%\end{figure} 
+
+
+\subsection*{Op-amp}
+
+%\subsubsection*{Seguidor}
+%\begin{figure} [H]
+%\centering
+%\includegraphics[scale=0.75]{seguidor.png}
+%\caption{ Esquema seguidor\label{fig:seguidor}}
+%\end{figure} 
+%
+%\begin{figure} [H]
+%\centering
+%\includegraphics[scale=0.45]{salida_diodo_recortada.png}
+%\caption{ Seguidor alimentado con 0 V\label{fig:salida_diodo_recortada}}
+%\end{figure} 
+%
+%\begin{figure} [H]
+%\centering
+%\includegraphics[scale=0.45]{salida_diodo.png}
+%\caption{ Seguidor alimentado con -5 V\label{fig:salida_diodo}}
+%\end{figure} 
+%
+%\begin{figure} [H]
+%\centering
+%\includegraphics[scale=0.45]{chirp_normalizada.png}
+%\caption{ Seguidor alimentado con -5 V\label{fig:chirp_normalizada}}
+%\end{figure} 
+
+
+\subsubsection*{Amplificador}
+
+En la Figura \ref{fig:salida_amplificador} se muestra la salida del op-amp al enviar una señal sinusoidal de 500 Hz con valores de resistencias de R1 = 4.6 k$\Omega$, R2 = 100 k$\Omega$ y C = 22 pF. A la derecha vemos cómo se verifica la linealidad entre la salida y la entrada, en donde la pendiente, que representa la ganancia del circuito, es de 22.33. Si consideramos la ganancia teórica obtenemos un valor de 22.73, por lo que podemos considerar que para estos valores de ganancia estamos dentro del rango de respuesta lineal del circuito.
+
+\begin{figure} [H]
+\centering
+\includegraphics[scale=0.45]{salida_amplificador.png}
+\caption{ Amplificador\label{fig:salida_amplificador}}
+\end{figure} 
+
+ En la Figura \ref{fig:respuestas_r1} mostramos la respuesta en frecuencias del amplificador a medida que variamos la relación R2/R1 del circuito (o sea a medida que aumentamos la ganancia del circuito). En este caso normalizamos las curvas a la respuesta teórica del chirp (al igual que lo hicimos anteriormente) y también al valor de respuesta obtenido a 1000 Hz. Es decir que el gráfico no permite verificar el aumento de la ganancia al variar la relación R1/R2, pero permite ver cómo se reduce su ancho de banda. 
+
+\begin{figure} [H]
+\centering
+\includegraphics[scale=0.45]{respuestas_r1.png}
+\caption{ Respuesta en frecuencias del amplificador al variar la relación R2/R1. \label{fig:respuestas_r1}}
+\end{figure} 
+
+Para estudiar la ganancia consideramos el gráfico de la Figura \ref{fig:ganancia_ancho_de_banda} donde mostramos la ganancia del circuito para distintos valores de R2/R1 y a distintas frecuencias. Como se dijo anteriormente la ganancia se obtuvo a partir de hacer la relación de la respuesta espectral de la entrada y la salida, luego de realizar la calibración en tensión de ambos canales. Cabe destacar que en este caso realizamos el cociente en amplitud entre la curvas, a diferencia del caso anterior en donde se consideraba la potencia. Como se puede observar del gráfico vemos que la respuesta lineal de la ganancia con la relación R2/R1 se verifica para ganancias pequeñas o para frecuencias bajas (o sea cuando la ganancia no está afectada por la disminución del ancho de banda). En particular, al realizar el ajuste lineal para el caso de 200 Hz obtenemos una pendiente de 1.002 y ordenada al origen de 0.25, siendo ambos valores esperados iguales 1 (\ref{eq:opamp}). A la derecha graficamos el ancho de banda en función de R2/R1, obtenido a partir de medir la frecuencia para la cual la potencia cae a la mitad. En el gráfico mostramos la restricción en el ancho de banda debido a la limitación de la placa de video.
+
+\begin{figure} [H]
+\centering
+\includegraphics[scale=0.42]{ganancia_ancho_de_banda.png}
+\caption{ Izquierda: Ganancia del amplificador en función de R2/R1. Observese que la linealidad de la ganancia con R2/R1 es válida para ganacias bajas o frecuencias de señal bajas. Derecha: ancho de banda en fucnión de R2/R1 obtenido a partir de las curvas del gráfico de la Figura anterior. \label{fig:ganancia_ancho_de_banda}}
+\end{figure} 
+
+A continuación (Figura \ref{fig:ganancia_ancho_de_banda_1_loglog}) graficamos la ganancia en función del ancho de banda obtenida a partir de combinar los gráficos de la Figura \ref{fig:ganancia_ancho_de_banda}. En el gráfico realizamos un ajuste lineal para el caso de baja frecuencia a fin de determinar el ancho de banda a ganancia unitaria, es decir la frecuencia umbral para la cual la amplitud a la entrada es igual a la salida.
+El valor hallado es de 1.387 MHz, siendo que el valor típico reportado por el fabricante es de 1.0 MHz. Cabe destacar que la limitación en el ancho de banda de la detección no nos permite obtener la curva para todo el rango, y por lo tanto el valor hallado es una estimación obtenida a partir del ajuste lineal de la curva Ganancia vs. Ancho de banda. La pendiente obtenida es de 9.29 dB/decada, comparable a los valores típicos de opamps de 10 dB/decada.
+
+\begin{figure} [H]
+\centering
+\includegraphics[scale=0.45]{ganancia_ancho_de_banda_1_loglog.png}
+\caption{Ganancia en función del ancho de banda a distintas frecuencias de señal. El ajuste de la caída del ancho de banda con la ganancia para bajas frecuencias nos permite estimar el valor del ancho de banda a ganancia unitaria. La caída a 20 KHz es debido a la limitación del ancho de banda del sistema. \label{fig:ganancia_ancho_de_banda_1_loglog}}
+\end{figure} 
+
+
+%El objetivo es medir la ganancia para dsitintas frecuencias. 
+%\subsubsection*{frecuencia de corte}
+%La idea aquí es armar un amplificador inversor y medir la frecuencia de corte para distintas ganancias. Para esto hay que tener en cuenta el rango de tensión que podemos medir con la placa, es decir variar las resistencias del amplificador para que la ganancia no sea tal que la señal sature
+%
+%\subsubsection*{Figure Noise}
+%
+%\subsubsection*{Slew Rate}
+
+% \section*{Anexo:}
+% \subsection*{Programa de adquisición}
+% 
+
+% \subsection*{Ejemplo}
+% La señal de salida digital es de tipo float32 y debe ser menor al valor 1 (uno). Los valores mayores a 1 espejan la señal alrededor del éste valor. En la Figura \ref{fig:senal_sintetica} se muestra un ejemplo de señal enviada en los canales CH0 y CH1. 
+
+% \begin{figure} [H]
+% \centering
+% \includegraphics[scale=0.45]{senal_sintetica.png}
+% \caption{Señal sintética enviada a los canales CH0 y CH1. \label{fig:senal_sintetica}}
+% \end{figure} 
+
+% En la Figura \ref{fig:senal_adquirida} se muestra la señal adquirida antes de realizar la corrección del retardo. Como se puede ver la señal de adquisición es de mayor duración debido a que el buffer de entrada es siempre mayor al de entrada para aseguraros de adquirir toda la señal debido al retardo.
+
+
+% \begin{figure} [H]
+% \centering
+% \includegraphics[scale=0.45]{senal_adquirida.png}
+% \caption{Señal adquirida en los canales CH0 y CH1. \label{fig:senal_adquirida}}
+% \end{figure} 
+
+% En la Figura \ref{fig:correlacion_cruzada} se muestra la correlación cruzada entra la señal digital del canal CH0 y la señal adquirida en el canal CH0. El tiempo transcurrido entre la mitad del vector de correlación y su máximo corresponde al retardo entre las señales. Cabe destacar que la correlación cruzada se realizó en primer lugar con la función correlate de la librería numpy, pero luego se utilizó la función de correlación basada en la FFT propuesta por Lex Fridman (https://lexfridman.com/fast-cross-correlation-and-time-series-synchronization-in-python/). La velocidad de este algoritmo es de hasta 500 veces mejor. 
+ 
+% \begin{figure} [H]
+% \centering
+% \includegraphics[scale=0.45]{correlacion_cruzada.png}
+% \caption{Correlación cruzada de la señal sintética del canal CH0 y la señal adquirida en el canal CH0.\label{fig:correlacion_cruzada}}
+% \end{figure} 
+
+% En la Figura \ref{fig:senal_adquirida_corregida} se muestra la señal adquirida luego de eliminar el retardo y recortando la señal a la misma duración de la señal de digital enviada. De esta manera la señal digital y la señal adquirida tienen la misma duración y la misma cantidad de muestras.
+ 
+% \begin{figure} [H]
+% \centering
+% \includegraphics[scale=0.45]{senal_adquirida_corregida.png}
+% \caption{Señal adquirida corregida en los canales CH0 y CH1. \label{fig:senal_adquirida_corregida}}
+% \end{figure} 
+ 
+
+% \subsection*{Retardo}
+% A continuación nos propusimos realizar un estudio estadístico del retardo entre las señales de entrada y salida, en función del tamaño de buffer de salida, el buffer de entrada y la frecuencia de sampleo. Para cada caso distinto se realizó un barrido de diez pasos o corridas iguales enviando un seno de 1000 Hz en ambos canales. En la Figura \ref{fig:frec_0} se muestra el retardo en función del número de corrida, para distintos tamaños de buffer de entrada y salida. Se observa que el retardo es mayor en la primera medición de cada barrido, y que luego se mantiene estable alrededor de los 100 ms. Después de la primera corrida, se observa un leve aumento del retardo a medida que el tamaño o duración de la señal se achica, y se observa que a mismo tamaño de buffer de entrada la variabilidad del retardo es pequeña. Similares resultados se observan en el caso en que se aumenta la frecuencia de sampleo (Figura \ref{fig:frec_7}). 
+% Tampoco se observa dependencia del retardo con la señal enviada. En la Figura \ref{fig:frec} se muestra el retardo al variar la frecuencia del seno enviado, para mismo tamaño de buffer de entrada, salida y frecuencia de sampleo.
+ 
+% \begin{figure} [H]
+% \centering
+% \includegraphics[scale=0.45]{frec_0.png}
+% \caption{Retardo entre la señal enviada y adquirida en función del número de corrida y para distintos tamaños de buffer. Frecuencia de sampleo de 44.1 kHz. \label{fig:frec_0}}
+% \end{figure} 
+ 
+% \begin{figure} [H]
+% \centering
+% \includegraphics[scale=0.45]{frec_7.png}
+% \caption{Retardo entre la señal enviada y adquirida en función del número de corrida y para distintos tamaños de buffer. Frecuencia de sampleo de 352.8 kHz.  \label{fig:frec_7}}
+% \end{figure} 
+
+
+
+
+% \begin{figure} [H]
+% \centering
+% \includegraphics[scale=0.45]{frec.png}
+% \caption{Retardo entre la señal enviada y adquirida en función del número de corrida y para distintas frecuencias de señales enviadas. Frecuencia de sampleo de 176.4 kHz.  \label{fig:frec}}
+% \end{figure} 
+
+
+
+
+
+
+% to comment sections out, use the command \ifx and \fi. Use this technique when writing your pre lab. For example, to comment something out I would do:
+%  \ifx
+%	\begin{itemize}
+%		\item item1
+%		\item item2
+%	\end{itemize}	
+%  \fi
+
+%
+\end{document}
+
+
+   \begin{figure}
+        \begin{subfigure}[b]{0.5\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{chirp_baja_tiempo.png}
+                \caption{} \label{fig:chirpbaja}
+        \end{subfigure}%
+        \begin{subfigure}[b]{0.5\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{chirp_detalle.png}
+                \caption{} \label{fig:chirpdetalle}
+        \end{subfigure}%
+        \caption{a) b) Detalle del ripple al inicio de la señal}\label{fig:chirp}
+\end{figure}

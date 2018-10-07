@@ -25,6 +25,8 @@ from P1_funciones import play_rec
 from P1_funciones import signalgen
 from P1_funciones import sincroniza_con_trigger
 from P1_funciones import par2ind
+from P1_funciones import fft_power_density
+
 
 
 params = {'legend.fontsize': 14,
@@ -116,6 +118,9 @@ dato = 'int16'
 carpeta_salida = 'Crosstalk'
 subcarpeta_salida = dato
 mic_level = 100
+fs = 44100*8  
+
+
 
 data_out = np.load(os.path.join(carpeta_salida,subcarpeta_salida, dato+'_data_out_mic' +str(mic_level)+'.npy'))
 data_in = np.load(os.path.join(carpeta_salida,subcarpeta_salida, dato+'_data_in_mic' +str(mic_level)+'.npy'))
@@ -133,17 +138,8 @@ delay = 2
 med = 5
 data_in = data_in[:,int(fs*delay):int(fs*(delay+med)),:]
 
-
-fft_acq_ch0 = abs(fft.fft(data_in[0,:,0]))**2/int(data_in.shape[1]/2+1)/fs
-fft_acq_ch0 = fft_acq_ch0[0:int(data_in.shape[1]/2+1)]
-fft_acq_ch0[1:] = 2*fft_acq_ch0[1:]
-
-fft_acq_ch1 = abs(fft.fft(data_in[0,:,1]))**2/int(data_in.shape[1]/2+1)/fs
-fft_acq_ch1 = fft_acq_ch1[0:int(data_in.shape[1]/2+1)]
-fft_acq_ch1[1:] = 2*fft_acq_ch1[1:]
-
-frec_acq = np.linspace(0,int(data_in.shape[1]/2),int(data_in.shape[1]/2+1))
-frec_acq = frec_acq*(fs/2+1)/int(data_in.shape[1]/2+1)
+frec_acq,fft_acq_ch0 = fft_power_density(data_in[0,:,0],fs)
+frec_acq,fft_acq_ch1 = fft_power_density(data_in[0,:,1],fs)   
         
 # Busco frecuencia de testeo
 frec_comparacion = [1020,1025]

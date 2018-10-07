@@ -24,6 +24,8 @@ import os
 from P1_funciones import play_rec
 from P1_funciones import signalgen
 from P1_funciones import sincroniza_con_trigger
+from P1_funciones import fft_power_density
+
 
 params = {'legend.fontsize': 24,
          'figure.figsize': (14, 9),
@@ -116,17 +118,9 @@ ch_send = 0
 paso = 0
 
 ### Realiza la FFT de la señal enviada y adquirida
-fft_send = abs(fft.fft(data_out[paso,:,ch_send]))**2/int(data_out.shape[1]/2+1)/fs
-fft_send = fft_send[0:int(data_out.shape[1]/2+1)]
-fft_send[1:] = 2*fft_send[1:]
-fft_acq = abs(fft.fft(data_in[paso,:,ch_acq]))**2/int(data_in.shape[1]/2+1)/fs
-fft_acq = fft_acq[0:int(data_in.shape[1]/2+1)]
-fft_acq[1:] = 2*fft_acq[1:]
 
-frec_send = np.linspace(0,int(data_out.shape[1]/2),int(data_out.shape[1]/2+1))
-frec_send = frec_send*(fs/2+1)/int(data_out.shape[1]/2+1)
-frec_acq = np.linspace(0,int(data_in.shape[1]/2),int(data_in.shape[1]/2+1))
-frec_acq = frec_acq*(fs/2+1)/int(data_in.shape[1]/2+1)
+frec_acq,fft_acq = fft_power_density(data_in[paso,:,ch_acq],fs)
+frec_send,fft_send = fft_power_density(data_out[paso,:,ch_send],fs)
 
 fig = plt.figure(figsize=(14, 7), dpi=250)
 ax = fig.add_axes([.12, .12, .75, .8])

@@ -29,6 +29,7 @@ from P1_funciones import signalgen
 from P1_funciones import signalgen_corrected
 from P1_funciones import sincroniza_con_trigger
 from P1_funciones import par2ind
+from P1_funciones import fft_power_density
 
 
 params = {'legend.fontsize': 14,
@@ -478,21 +479,12 @@ steps_correlacion = int(fs*(0.1))
 data_in1, retardos1 = play_rec(fs,input_channels,data_out1,'si',offset_correlacion,steps_correlacion)
 
 
-
 ###
 frec_comp = 10000
 
-fft_send = abs(fft.fft(data_out1[0,:,0]))**2/int(data_out1.shape[1]/2+1)/fs
-fft_send = fft_send[0:int(data_out1.shape[1]/2+1)]
-fft_acq_input = abs(fft.fft(data_in1[0,:,0]))**2/int(data_in1.shape[1]/2+1)/fs
-fft_acq_input = fft_acq_input[0:int(data_in1.shape[1]/2+1)]
-fft_acq_output = abs(fft.fft(data_in1[0,:,1]))**2/int(data_in1.shape[1]/2+1)/fs
-fft_acq_output = fft_acq_output[0:int(data_in1.shape[1]/2+1)]
-
-frec_send = np.linspace(0,int(data_out1.shape[1]/2),int(data_out1.shape[1]/2+1))
-frec_send = frec_send*(fs/2+1)/int(data_out1.shape[1]/2+1)
-frec_acq = np.linspace(0,int(data_in1.shape[1]/2),int(data_in1.shape[1]/2+1))
-frec_acq = frec_acq*(fs/2+1)/int(data_in1.shape[1]/2+1)
+frec_send,fft_send = fft_power_density(data_out1[0,:,0],fs)
+frec_acq,fft_acq_input = fft_power_density(data_in1[0,:,0],fs)
+frec_acq,fft_acq_output = fft_power_density(data_in1[0,:,1],fs)   
 
 frec_ind_acq = np.argmin(np.abs(frec_acq-frec_comp))
 frec_ind_send = np.argmin(np.abs(frec_send-frec_comp))
@@ -810,19 +802,11 @@ for i in range(len(R1s)):
     # Calibracion de los canales
     data_in1[:,:,0] = (data_in1[:,:,0]-calibracion_CH0_seno[1]*2**16)/(calibracion_CH0_seno[0]*2**16)
     data_in1[:,:,1] = (data_in1[:,:,1]-calibracion_CH1_seno[1]*2**16)/(calibracion_CH1_seno[0]*2**16)
+
+    frec_send,fft_send = fft_power_density(data_out1[0,:,0],fs)
+    frec_acq,fft_acq_input = fft_power_density(data_in1[0,:,0],fs)
+    frec_acq,fft_acq_output = fft_power_density(data_in1[0,:,1],fs)   
         
-    fft_send = abs(fft.fft(data_out1[0,:,0]))**2/int(data_out1.shape[1]/2+1)/fs
-    fft_send = fft_send[0:int(data_out1.shape[1]/2+1)]
-    fft_acq_input = abs(fft.fft(data_in1[0,:,0]))**2/int(data_in1.shape[1]/2+1)/fs
-    fft_acq_input = fft_acq_input[0:int(data_in1.shape[1]/2+1)]
-    fft_acq_output = abs(fft.fft(data_in1[0,:,1]))**2/int(data_in1.shape[1]/2+1)/fs
-    fft_acq_output = fft_acq_output[0:int(data_in1.shape[1]/2+1)]
-    
-    frec_send = np.linspace(0,int(data_out1.shape[1]/2),int(data_out1.shape[1]/2+1))
-    frec_send = frec_send*(fs/2+1)/int(data_out1.shape[1]/2+1)
-    frec_acq = np.linspace(0,int(data_in1.shape[1]/2),int(data_in1.shape[1]/2+1))
-    frec_acq = frec_acq*(fs/2+1)/int(data_in1.shape[1]/2+1)
-    
     frec_ind_acq = np.argmin(np.abs(frec_acq-frec_comp))
     frec_ind_send = np.argmin(np.abs(frec_send-frec_comp))
 
