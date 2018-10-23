@@ -44,6 +44,7 @@ def callback(callback_variables,*args):
 
 input_buffer, output_buffer = play_rec_continuo(fs,frames_per_buffer,chunks_buffer,callback,callback_variables)
 
+dfgd
 
 #%%
 todo = np.reshape(input_buffer,input_buffer.shape[0]*input_buffer.shape[1])
