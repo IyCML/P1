@@ -344,6 +344,188 @@ def play_rec(fs,input_channels,data_out,corrige_retardos,offset_correlacion=0,st
     return data_in, retardos
  
 
+def play_rec_continuo(fs,frames_per_buffer,chunks_buffer,callback,callback_variables):
+    
+    
+    """
+    Descripción:
+    ------------
+
+    
+    Parámetros:
+    -----------
+    
+
+    
+    Salida (returns):
+    -----------------
+
+    
+    Ejemplo:
+    --------
+    
+
+   
+    Autores: Marco Petriella    
+    """  
+    
+  
+    # Tipo de dato
+    dato_np = np.int16
+    dato_pyaudio = pyaudio.paInt16   
+    
+    frames_per_input_buffer = frames_per_buffer
+    frames_per_output_buffer = frames_per_buffer
+    
+    chunks_input_buffer1 = 10
+    chunks_input_buffer = chunks_buffer
+    chunks_output_buffer = chunks_buffer
+    
+    
+    output_channels = 1
+    input_channels = 1
+    
+    # Inicia pyaudio
+    p = pyaudio.PyAudio()
+              
+    # Defino el stream del parlante
+    stream_output = p.open(format=pyaudio.paFloat32,
+                    channels = output_channels,
+                    rate = fs,
+                    output = True,                  
+    )    
+    
+    # Defino el stream del microfono
+    stream_input = p.open(format = dato_pyaudio,
+                    channels = input_channels,
+                    rate = fs,
+                    input = True,
+                    frames_per_buffer = frames_per_input_buffer,
+    )
+    
+    
+    # Defino los buffers
+    input_buffer = np.zeros([chunks_input_buffer,frames_per_input_buffer],dtype=dato_np)
+    output_buffer = np.zeros([chunks_output_buffer,frames_per_input_buffer*4],dtype=np.float32)
+    
+    # BUffer de adquisición
+    data_i = []
+    for i in range(chunks_input_buffer1):
+        stream_input.start_stream()
+        data_i.append(stream_input.read(frames_per_input_buffer))
+        stream_input.stop_stream()           
+    
+    # Semaforos
+    semaphore1 = threading.Semaphore(0)
+    semaphore2 = threading.Semaphore(0)
+               
+    # Defino el thread que envia la señal          
+    def producer():  
+        i = 0
+        while producer_exit[0] is False:
+            
+            semaphore2.acquire()            
+            stream_output.write(output_buffer[i,:])
+            
+            i = i+1
+            i = i%chunks_output_buffer     
+    
+        producer_exit[0] = True  
+            
+
+    # Defino el thread que adquiere la señal   
+    def consumer():
+        i = 0
+        while consumer_exit[0] is False:
+            
+            data_i[i] = stream_input.read(frames_per_input_buffer)  
+
+            i = i+1
+            i = i%chunks_input_buffer1
+            
+            semaphore1.release()
+                
+        consumer_exit[0] = True  
+
+    # Defino el thread que adquiere la señal   
+    def consumer1():
+        i = 0
+        j = 0
+        while consumer_exit1[0] is False:
+            
+            if semaphore1._value > chunks_input_buffer1:
+                print('Hay overun en la lectura! \n')
+
+            if semaphore2._value > chunks_input_buffer:
+                print('Hay overun en la escritura! \n')
+                
+            semaphore1.acquire()    
+
+            data_ii = -np.frombuffer(data_i[j], dtype=dato_np) 
+            input_buffer[i,:] = data_ii
+            
+            j = j+1
+            j = j%chunks_input_buffer1          
+            
+            # Aca va el callback
+            output_buffer_i = callback(callback_variables,input_buffer,output_buffer,i,frames_per_buffer,chunks_buffer,fs)            
+            output_buffer[i,0:frames_per_buffer] = output_buffer_i
+            semaphore2.release()
+            
+            i = i+1
+            i = i%chunks_input_buffer   
+                
+        consumer_exit1[0] = True  
+        
+        
+           
+    # Variables de salida de los threads
+    producer_exit = [False]   
+    consumer_exit = [False] 
+    consumer_exit1 = [False] 
+            
+    # Inicio los threads    
+    print (u'\n Inicio barrido \n Presione Ctrl + c para interrumpir.')
+    t1 = threading.Thread(target=producer, args=[])
+    t2 = threading.Thread(target=consumer, args=[])
+    t3 = threading.Thread(target=consumer1, args=[])
+    
+    stream_input.start_stream()
+    stream_output.start_stream()
+    
+    t1.start()
+    t2.start()
+    t3.start()
+    
+    # Salida de la medición       
+    while not producer_exit[0] or not consumer_exit[0] or not consumer_exit1[0]:
+        try: 
+            time.sleep(0.2)
+        except KeyboardInterrupt:
+            consumer_exit[0] = True  
+            consumer_exit1[0] = True  
+            producer_exit[0] = True  
+            time.sleep(0.2)
+            print ('\n \n Medición interrumpida \n')
+
+
+    # Finalizo los puertos 
+    while stream_input.is_active():
+        stream_input.stop_stream()  
+        time.sleep(0.2)
+
+    # Finalizo los puertos 
+    while stream_output.is_active():
+        stream_output.stop_stream()   
+        time.sleep(0.2)        
+    
+    stream_input.close()
+    stream_output.close()
+    p.terminate()   
+        
+    return input_buffer, output_buffer
+
+
 
 def completa_con_ceros(data_out,new_size1,mode='forward'):
     
